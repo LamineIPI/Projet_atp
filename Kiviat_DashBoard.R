@@ -49,4 +49,43 @@ summary(Serve_points)
 #Faire la somme de tout les services
 serv_tot <- colSums(Serve_points,na.rm = T)
 
+####################################################################   ACE   ########################################################################
+########################################
+#### Ace raf quand il win
+########################################
+atp_Nadal %>%
+  filter(winner_id =='104745')
+summary(atp_Nadal$w_ace)
 
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete <- dbSendQuery(conn = sqlite_con, statement
+                       = "SELECT w_ace FROM atp_Nadal WHERE winner_id = '104745'")
+requete  
+tab_ace<- dbFetch(requete)
+summary(tab_ace)
+
+
+
+########################################
+#### Ace raf quand il lose
+########################################
+atp_Nadal %>%
+  filter(loser_id =='104745')
+summary(atp_Nadal$l_ace)
+
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé?
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+requete2 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT l_ace FROM atp_Nadal WHERE loser_id = '104745'")
+requete2  
+tab_lace<- dbFetch(requete2)
+summary(tab_lace)
+#concaténer win+lose 
+colnames(tab_lace) <- "w_ace" #Rend possible la concaténation
+Ace <-rbind(tab_ace,tab_lace)
+summary(Ace)
+ace_tot <- colSums(Ace,na.rm = T)
