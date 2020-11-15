@@ -131,3 +131,44 @@ fstWon <-rbind(tab_w_1stWon,tab_l_1stWon)
 summary(fstWon)
 fstWon_tot <- colSums(fstWon,na.rm = T)
 
+####################################################################   (2ndWon) point remporter second service  ########################################################################
+########################################
+#### 2ndWon raf quand il win
+########################################
+atp_Nadal %>%
+  filter(winner_id =='104745')
+summary(atp_Nadal$w_2ndWon)
+
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete5 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT w_2ndWon FROM atp_Nadal WHERE winner_id = '104745'")
+requete5  
+tab_w_2ndWon<- dbFetch(requete5)
+summary(tab_w_2ndWon)
+
+
+########################################
+#### 2ndWon raf quand il lose (le match)
+########################################
+atp_Nadal %>%
+  filter(loser_id =='104745')
+summary(atp_Nadal$l_2ndWon)
+
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+requete6 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT l_2ndWon FROM atp_Nadal WHERE loser_id = '104745'")
+requete6  
+tab_l_2ndWon<- dbFetch(requete6)
+summary(tab_l_2ndWon)
+
+#concaténer win+lose 
+colnames(tab_l_2ndWon) <- "w_2ndWon" #Rend possible la concaténation
+sndWon <-rbind(tab_w_2ndWon,tab_l_2ndWon)
+summary(sndWon)
+sndWon_tot <- colSums(sndWon,na.rm = T)
+
