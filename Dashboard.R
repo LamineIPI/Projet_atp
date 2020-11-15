@@ -14,4 +14,24 @@ players %>%
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
-#GIT ANAS 11 
+#Nombre de match par tournoi
+atp_Nadal %>%
+  group_by(tourney_name)%>%
+  summarize(`Nombre de matchs` = n())
+
+# Victoires et défaites par saison
+atp_Nadal %>%
+  mutate(resultat = ifelse(winner_id==id_Nadal, 'win', 'lost')) %>%
+  group_by(resultat)%>%
+  summarize(`matchs gagnés` = n())
+
+# Matchs joués selon la surface
+atp_Nadal %>%
+  group_by(Surface) %>%
+  summarize(`matchs joués` = n())
+
+# Nombre de titre par saison
+atp_Nadal%>%
+  mutate(resultat = ifelse(winner_id==id_Nadal, 'win', 'lost'))%>%
+  filter(round == "F", resultat == "win")%>%
+  summarise(Titres = n())
