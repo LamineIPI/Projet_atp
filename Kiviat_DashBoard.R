@@ -277,3 +277,16 @@ requete6 <- dbSendQuery(conn = sqlite_con, statement
 requete6  
 tab_avg_servepoint_2013<- dbFetch(requete6)
 summary(tab_avg_servepoint_2013)
+
+#################################################################### Mise en forme diagramme ########################################################################
+##Création de la base pour la diagramme
+
+Raf_radar <- data.frame(
+  "Break Points Sauvés" = c(100,0,(w_bpSaved_tot/w_bpFaced_tot)*100),
+  "Ace" = c(100,0,(ace_tot/serv_tot)*100),
+  "Deuxieme Service Gagnant" = c(100,0,(sndWon_tot/serv_tot)*100),
+  "Premier Service Gagnant" = c(100,0,(fstWon_tot/serv_tot)*100)
+  
+)
+
+colnames(Raf_radar)<-c("Break Points Sauvés","Aces","Deuxiemes Services Gagnants","Premiers Services Gagnants" ) #Contre l'affichage des noms avec des points
