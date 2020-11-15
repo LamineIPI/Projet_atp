@@ -85,3 +85,34 @@ summary(Ace)
 #En moyenne Rafael nadal a fait 2.728 Ace par match lors de sa saison
 # Il a fait au maximum 9 Ace dans un seul match
 
+#Type de sol
+table(atp_Nadal$surface)
+Pourcentage=data.frame(group=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
+ggplot(Pourcentage,aes(x="",y=value,fill=group)) + 
+  geom_bar(width = 1,stat="identity")  + 
+  coord_polar("y",start=0) +
+  labs(caption = "Source : Les auteurs") +
+  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
+  theme_void()  + 
+  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
+            position = position_stack(vjust = 0.5)) +
+  ggtitle("R?partition de tous les matchs en fonction de leur surface") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## diagramme Surface + best of 
+atp_Nadal %>%
+  filter(surface=="Clay" | surface =="Hard") %>%
+  count(surface=factor(surface), best_of= factor(best_of)) %>% 
+  ungroup() %>% 
+  mutate(pct=n/sum(n) *100) %>%
+  ggplot(aes(x=surface,y=pct,fill=best_of)) + 
+  geom_bar(stat = 'identity', position = "fill") +
+  geom_text(aes(y = pct, label = c("80.5%","19.5%","82.9%","17.1%")),  
+            position = "fill", vjust=3,
+            size = 4) +
+  ggtitle("Le nombre de best of effectu? par Raphael Nadal en fonction de la surface du terrain") +
+  scale_fill_manual(values = c("royalblue", "lightblue")) + 
+  theme_minimal()+
+  labs(caption = "Source : Les auteurs") +
+  xlab("Surface") + ylab("best of") +
+  theme(plot.title = element_text(hjust = 0.5))
