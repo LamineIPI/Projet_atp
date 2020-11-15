@@ -265,6 +265,7 @@ ggplot(atp_Nadal,aes(x=Raph_vic, fill=main)) +
   theme_minimal()
 >>>>>>> b410febc83fa219e17059dba3d7799acc28e897f
 
+library(fmsb)
 
 ####Diagramme de Kiviat: Nadal vs Top_10
 
