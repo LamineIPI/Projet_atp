@@ -14,6 +14,17 @@ players %>%
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
+# création d'une colonne pour savoir lorsque nadal gagne ou perd 
+for(i in 1:nrow(atp_Nadal)){
+  if( atp_Nadal[i,8] == 104745){
+    atp_Nadal[i,50]="win"
+  }else{
+    atp_Nadal[i,50]="loose"
+  }}
+
+names(atp_Nadal)[50] ="Raph_vic"
+
+
 #Nombre de match par tournoi
 atp_Nadal %>%
   group_by(tourney_name)%>%
