@@ -290,3 +290,19 @@ Raf_radar <- data.frame(
 )
 
 colnames(Raf_radar)<-c("Break Points Sauvés","Aces","Deuxiemes Services Gagnants","Premiers Services Gagnants" ) #Contre l'affichage des noms avec des points
+
+#View(Raf_radar)
+radarchart(Raf_radar,axistype=1 ,
+           
+           #custom polygon
+           pcol=rgb(0.2,0.5,0.5,0.9) , pfcol=rgb(0.2,0.5,0.5,0.5) , plwd=4 , 
+           
+           #custom the grid
+           cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+           
+           #custom labels
+           vlcex=0.8 
+)
+title("Statistiques récapitulatives de Nadal (en %) ")
+
+dbDisconnect(conn = sqlite_con)
