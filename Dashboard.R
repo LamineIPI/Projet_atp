@@ -14,7 +14,6 @@ players %>%
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
-ff
 # création d'une colonne pour savoir lorsque nadal gagne ou perd 
 for(i in 1:nrow(atp_Nadal)){
   if( atp_Nadal[i,8] == 104745){
