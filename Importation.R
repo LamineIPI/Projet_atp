@@ -1,5 +1,7 @@
 Importation de fichiers
-setwd("C:/Users/uc/Desktop/Master SEP/Tests Stat/tennis_atp-master")
+chemin = choose.dir()
+setwd(dir = chemin)
+
 
 # Packages
 library(tidyverse)
@@ -15,7 +17,7 @@ names(players) <- c("id", "firstname", "lastname", "hand", "birthday", "nat")
 lst <- list.files(path = "C:/Users/uc/Desktop/Master SEP/Tests Stat/tennis_atp-master")
 lst_data <- grep(pattern = "^atp_matches_[[:digit:]]{4}.csv$", x = lst, value = TRUE)
 lst_names <- paste('atp', str_extract(string = lst_data, pattern = "[[:digit:]]{4}"), sep = "")
-lst_tib <- map(.x = lst_data, function (x) read_csv(paste("C:/Users/uc/Desktop/Master SEP/Tests Stat/tennis_atp-master/", x, sep = "")))
+lst_tib <- map(.x = lst_data, function (x) read_csv(paste(chemin,"/", x,sep ="")))
 names(lst_tib) <- lst_names
 
 atp <- reduce(.x = lst_tib, .f = bind_rows)
