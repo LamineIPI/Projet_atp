@@ -96,7 +96,7 @@ ggplot(Pourcentage,aes(x="",y=value,fill=group)) +
   theme_void()  + 
   geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
             position = position_stack(vjust = 0.5)) +
-  ggtitle("R?partition de tous les matchs en fonction de leur surface") +
+  ggtitle("Répartition de tous les matchs en fonction de leur surface") +
   theme(plot.title = element_text(hjust = 0.5))
 
 ## diagramme Surface + best of 
