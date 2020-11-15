@@ -172,3 +172,48 @@ sndWon <-rbind(tab_w_2ndWon,tab_l_2ndWon)
 summary(sndWon)
 sndWon_tot <- colSums(sndWon,na.rm = T)
 
+
+
+####################################################################   Nb break points faced  ########################################################################
+
+########################################
+#### Nb break points faced quand il win
+########################################
+atp_Nadal %>%
+  filter(winner_id =='104745')
+summary(atp_Nadal$w_bpFaced)
+library('DBI')
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete7 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT w_bpFaced FROM atp_Nadal WHERE winner_id = '104745'")
+requete7
+tab_w_bpFaced<- dbFetch(requete7)
+
+summary(tab_w_bpFaced)
+
+
+########################################
+# Nb break points faced il lose
+########################################
+atp_Nadal %>%
+  filter(loser_id =='104745')
+
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete8 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT l_bpFaced FROM atp_Nadal WHERE loser_id = '104745'")
+requete8
+tab_l_bpFaced<- dbFetch(requete8)
+summary(tab_l_bpFaced)
+
+#concaténer win+lose 
+colnames(tab_l_bpFaced) <- "w_bpFaced" #Rend possible la concaténation
+Break_points_faced <-rbind(tab_w_bpFaced,tab_l_bpFaced)
+summary(Break_points_faced)
+#Faire la somme de tout les break point "faced"
+w_bpFaced_tot <- colSums(Break_points_faced,na.rm = T)
