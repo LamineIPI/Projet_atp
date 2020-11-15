@@ -54,3 +54,34 @@ summary(atp_Nadal$minutes)
 #Nombre de match disputé en bo3 ou bo5
 table(atp_Nadal$best_of)
 #67 bo3 pour 16 bo5
+
+#Ace gagnant par Raphael Nadal
+summary(atp_Nadal$w_ace)
+atp_Nadal %>%
+  filter(winner_id =='104745')
+  summary(atp_Nadal$w_ace)
+  library('DBI')
+  sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On sp?cifie le pilote utilis?
+                         dbname = ":memory:")
+  dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+  
+requete <- dbSendQuery(conn = sqlite_con, statement
+                       = "SELECT w_ace FROM atp_Nadal WHERE winner_id = '104745'")
+requete  
+tab_ace<- dbFetch(requete)
+summary(tab_ace)
+#En moyenne Rafael nadal fait 2.77 Ace dans un match o? il a gagn?
+# Il a fait au maximum 9 Ace dans un seul match
+
+requete1 <- dbSendQuery(conn = sqlite_con, statement
+                       = "SELECT l_ace FROM atp_Nadal WHERE loser_id = '104745'")
+requete1  
+tab_lace<- dbFetch(requete1)
+colnames(tab_lace) <- "w_ace"
+
+Ace <-rbind(tab_ace,tab_lace)
+
+summary(Ace)
+#En moyenne Rafael nadal a fait 2.728 Ace par match lors de sa saison
+# Il a fait au maximum 9 Ace dans un seul match
+
