@@ -14,8 +14,3 @@ players %>%
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
-<<<<<<< HEAD
-#JE FAIS UN test
-=======
-#GIT ANAS
->>>>>>> faa204641e28ad66694aff9d830defb30c05c7de
