@@ -13,5 +13,3 @@ players %>%
 # Filtrer par Nadal
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
-
-#GIT ANAS
