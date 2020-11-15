@@ -116,3 +116,30 @@ atp_Nadal %>%
   labs(caption = "Source : Les auteurs") +
   xlab("Surface") + ylab("best of") +
   theme(plot.title = element_text(hjust = 0.5))
+
+## diagramme victoire + Bestof dans un match 
+
+ggplot(atp_Nadal,aes(x=Raph_vic, fill=as.character(best_of))) +
+  geom_bar(position = "dodge") + 
+  scale_fill_manual(values= c( "royalblue","lightblue"))+
+  geom_text(aes(label=after_stat(count)),stat = "count",
+            position = position_dodge(0.9)) +
+  ggtitle("Le nombre de set par match en fonction de  \n la victoire ou d?faite de Raphael Nadal") + 
+  labs(caption = "Source : Les auteurs") +
+  xlab("redoublement") + ylab("Effectifs") +
+  theme( plot.title = element_text(hjust = 0.5) ) + 
+  theme_minimal()
+
+## diagramme victoire + Main dominante de l'adversaire
+main=ifelse(atp_Nadal$winner_id=='104745',atp_Nadal$loser_hand,atp_Nadal$winner_hand)
+
+ggplot(atp_Nadal,aes(x=Raph_vic, fill=main)) +
+  geom_bar(position = "dodge") + 
+  scale_fill_manual(values= c( "royalblue","lightblue"))+
+  geom_text(aes(label=after_stat(count)),stat = "count",
+            position = position_dodge(0.9)) +
+  ggtitle("La main dominante de son adversaire en fonction de  \n la victoire ou d?faite de Raphael Nadal") + 
+  labs(caption = "Source : Les auteurs") +
+  xlab("redoublement") + ylab("Effectifs") +
+  theme( plot.title = element_text(hjust = 0.5) ) + 
+  theme_minimal()
