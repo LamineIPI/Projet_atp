@@ -86,7 +86,7 @@ summary(Ace)
 # Il a fait au maximum 9 Ace dans un seul match
 
 #Type de sol
-table(atp_Nadal$surface)
+table(atp_Nadal$Surface)
 Pourcentage=data.frame(group=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
 ggplot(Pourcentage,aes(x="",y=value,fill=group)) + 
   geom_bar(width = 1,stat="identity")  + 
@@ -101,11 +101,11 @@ ggplot(Pourcentage,aes(x="",y=value,fill=group)) +
 
 ## diagramme Surface + best of 
 atp_Nadal %>%
-  filter(surface=="Clay" | surface =="Hard") %>%
-  count(surface=factor(surface), best_of= factor(best_of)) %>% 
+  filter(Surface=="Terre battue" | Surface =="Dur") %>%
+  count(Surface=factor(surface), best_of= factor(best_of)) %>% 
   ungroup() %>% 
   mutate(pct=n/sum(n) *100) %>%
-  ggplot(aes(x=surface,y=pct,fill=best_of)) + 
+  ggplot(aes(x=Surface,y=pct,fill=best_of)) + 
   geom_bar(stat = 'identity', position = "fill") +
   geom_text(aes(y = pct, label = c("80.5%","19.5%","82.9%","17.1%")),  
             position = "fill", vjust=3,
