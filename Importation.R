@@ -20,5 +20,9 @@ names(lst_tib) <- lst_names
 atp <- reduce(.x = lst_tib, .f = bind_rows)
 head(atp)
 
+# Ajout de la variable years
+atp <- atp %>% 
+  mutate(years = str_extract(string = tourney_id, pattern = "[[:digit:]]{4}"))
+
 
 
