@@ -46,3 +46,11 @@ atp_Nadal%>%
   mutate(resultat = ifelse(winner_id==id_Nadal, 'win', 'lost'))%>%
   filter(round == "F", resultat == "win")%>%
   summarise(Titres = n())
+
+#Moyenne des minutes par match :
+summary(atp_Nadal$minutes)
+#Moyenne de 108.5
+
+#Nombre de match disputé en bo3 ou bo5
+table(atp_Nadal$best_of)
+#67 bo3 pour 16 bo5
