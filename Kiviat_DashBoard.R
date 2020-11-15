@@ -217,3 +217,63 @@ Break_points_faced <-rbind(tab_w_bpFaced,tab_l_bpFaced)
 summary(Break_points_faced)
 #Faire la somme de tout les break point "faced"
 w_bpFaced_tot <- colSums(Break_points_faced,na.rm = T)
+
+####################################################################   Nb break points saved  ########################################################################
+
+########################################
+#### Nb break points saved quand il win
+########################################
+atp_Nadal %>%
+  filter(winner_id =='104745')
+summary(atp_Nadal$w_bpSaved)
+library('DBI')
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete9 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT w_bpSaved FROM atp_Nadal WHERE winner_id = '104745'")
+requete9
+tab_w_bpSaved<- dbFetch(requete9)
+
+summary(tab_w_bpSaved)
+
+
+########################################
+# Nb break points saved il lose
+########################################
+atp_Nadal %>%
+  filter(loser_id =='104745')
+
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilisé
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+requete10 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT l_bpSaved FROM atp_Nadal WHERE loser_id = '104745'")
+requete10
+tab_l_bpSaved<- dbFetch(requete10)
+summary(tab_l_bpSaved)
+
+#concaténer win+lose 
+colnames(tab_l_bpSaved) <- "w_bpSaved" #Rend possible la concaténation
+Break_points_Saved <-rbind(tab_w_bpSaved,tab_l_bpSaved)
+summary(Break_points_Saved)
+#Faire la somme de tout les break point "Saved"
+w_bpSaved_tot <- colSums(Break_points_Saved,na.rm = T)
+
+
+
+
+########################################
+#Moyenne des service gagnant pour chaque joueur en 2013 (MAX) (useless pour l'instant)
+########################################
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(), #On spécifie le pilote utilis?
+                       dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp2013", value = atp2013)
+
+requete6 <- dbSendQuery(conn = sqlite_con, statement
+                        = "SELECT winner_name, avg(w_svpt) FROM atp2013 group by winner_name order by avg(w_svpt)")
+requete6  
+tab_avg_servepoint_2013<- dbFetch(requete6)
+summary(tab_avg_servepoint_2013)
