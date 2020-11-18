@@ -4,7 +4,8 @@ library(tidyverse)
 library(readxl)
 library(tidyr)
 library(fmsb)
- 
+
+
 ####################################################################   Nb service  ########################################################################
 ####On aurait pu le faire plus simplement avec ifelse(atp_Nadal$winner_id=='104745',atp_Nadal$w_svpt,atp_Nadal$l_svpt) (a adapter a toute les variables)
 ########################################
@@ -29,6 +30,8 @@ summary(tab_w_svpt)
 ########################################
 # nb service il lose
 ########################################
+
+
 atp_Nadal %>%
   filter(loser_id =='104745')
 
