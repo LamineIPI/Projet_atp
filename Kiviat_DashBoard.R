@@ -286,7 +286,7 @@ summary(tab_avg_servepoint_2013)
 
 Raf_radar <- data.frame(
   "Break Points Sauvés" = c(100,0,(w_bpSaved_tot/w_bpFaced_tot)*100),
-  "Ace" = c(100,0,(ace_tot/serv_tot)*100),
+  "Ace" = c(10,0,(ace_tot/serv_tot)*100),
   "Deuxieme Service Gagnant" = c(100,0,(sndWon_tot/serv_tot)*100),
   "Premier Service Gagnant" = c(100,0,(fstWon_tot/serv_tot)*100)
   
