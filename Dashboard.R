@@ -14,8 +14,6 @@ players %>%
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #creation de nouvelles variables 
 atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
 D%>%mutate(df=ifelse(Nadal_win==1,w_df,l_df))->D
@@ -133,7 +131,6 @@ colnames(average) <- c('ace gagnés','jeux de sevrce G','nombre de services','pr
 radarchart(average)
 
 
-=======
 # création d'une colonne pour savoir lorsque nadal gagne ou perd 
 for(i in 1:nrow(atp_Nadal)){
   if( atp_Nadal[i,8] == 104745){
@@ -263,4 +260,3 @@ ggplot(atp_Nadal,aes(x=Raph_vic, fill=main)) +
   xlab("redoublement") + ylab("Effectifs") +
   theme( plot.title = element_text(hjust = 0.5) ) + 
   theme_minimal()
->>>>>>> b410febc83fa219e17059dba3d7799acc28e897f
