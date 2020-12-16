@@ -6,6 +6,9 @@ library("stringr")
 library('purrr')
 library('rmarkdown')
 library('flexdashboard')
+library("ggthemes")
+library('DBI')
+
 ### Importation de la atp_players contenant les identifiants des joueurs
 players <- read_csv(file = "data/atp_players.csv",
                     col_names = FALSE)
