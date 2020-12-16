@@ -1,0 +1,98 @@
+---
+title: "Dashboard"
+author: "Remontada"
+date: "15/12/2020"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+---
+
+Column
+--------------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overall {data-width=300}
+
+### Nombre de match gagné par le joueur
+
+```{r}
+nb_win <- max(table(atp_Nadal$winner_name))
+valueBox(nb_win, icon = "fa-trophy", color= "red")
+```
+
+
+### Nombre de titres remportés  
+
+```{r}
+nb_titre <- atp_Nadal%>%
+  mutate(resultat = ifelse(winner_id==id_Nadal, 'win', 'lost'))%>%
+  filter(round == "F", resultat == "win")%>%
+  summarise(Titres = n())
+valueBox(nb_titre, icon = "fa-medal", color= "gold")
+```
+
+
+### Durée moyenne des matchs (en seconde)
+
+```{r}
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+```
+
+
+### Nombre de Ace maximum sur les matchs où le joueur a gagné
+
+```{r}
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(),
+                         dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+nb_Ace <- as.numeric(str_sub(summary(dbFetch(dbSendQuery(conn = sqlite_con, statement
+                       = "SELECT w_ace FROM atp_Nadal WHERE winner_id = '104745'")))[6],9,12))
+valueBox(nb_Ace, icon = "fa-baseball-ball", color = "Blue")
+```
+
+
+Column
+--------------------------------
+
+```{r cars, cache = TRUE, results = FALSE}
+
+Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
+ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
+  geom_bar(width = 1,stat="identity", color = "white")  + 
+  coord_polar("y",start=0) +
+  labs(caption = "Source : Les auteurs") +
+  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
+  theme_economist()  + 
+  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
+            position = position_stack(vjust = 0.5)) +
+  ggtitle("Répartition de tous les matchs en fonction de leur surface") +
+  theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
+```
+
+Column
+--------------------------------
+```{r, cache = TRUE, results = FALSE}
+#ne marche pas il faut adapter
+# library(fmsb)
+# D%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->D
+# D%>%group_by(Surface)%>%summarise(Nb_ace=sum(ace,na.rm = TRUE))%>%mutate(freq=Nb_ace/sum(Nb_ace),lab=paste0(round(freq*100,0),"%"))->aces
+# 
+# 
+# ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% d ace marqués')+
+#   ggtitle('Ace marqués en fonction de la surface du terrain')+
+#   geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
+#   scale_fill_manual(values=c("#4E84C4","#52854C","#D16103"))+
+#   theme_economist()+
+#   theme(legend.position="right")
+```  
+
+## Slide with Plot
+
+
