@@ -223,15 +223,17 @@ ggplot(atp_Nadal,aes(x=Raph_vic, fill=main)) +
   theme( plot.title = element_text(hjust = 0.5) ) + 
   theme_minimal()
 
+#################################################Nadal vs Top_10#########################################################
+
 library(fmsb)
 
-####Diagramme de Kiviat: Nadal vs Top_10
-
+#Nombre de match gagné des top10 par surface 
 atp_matches_2013 %>%
   filter((winner_name != "Rafael Nadal" & winner_rank < 11) | (loser_name != "Rafael Nadal" & loser_rank < 11)) %>%
   group_by(Surface) %>%
   summarize(nombre_victoire = n()) -> nbr_game_top10
 
+#Création de la variable "nombre de match joué" pour calculer le taux des gains pour les top10 
 atp_matches_2013 %>%
   filter(winner_name != "Rafael Nadal" & winner_rank < 11) %>%
   group_by(Surface) %>%
@@ -239,16 +241,18 @@ atp_matches_2013 %>%
   mutate(nb_match =nbr_game_top10$nombre_victoire, taux = round(nombre_victoire/nb_match,2)) %>%
   as.data.frame() -> nbr_game_top10_win 
 
+#Multiplier le taux des gains des top10 par le nombre de match joué par nadal 
+#afin de comparer nadal et les top10
 nbr_game_top10_win <- nbr_game_top10_win %>%
   mutate(nb_gameNadal = c(41,1,41),victoire_top10=nb_gameNadal*taux)
 
-
-#Nombre de jeu de Nadal par surface
+#Nombre de match gagné de Rafael Nadal par surface
 atp_Nadal %>% 
   filter(winner_name == "Rafael Nadal") %>%
   group_by(Surface) %>%
   summarize(Nombre_match =n()) -> Kiviat_Nb
 
+#Mise en forme du diagramme 
 Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
 min <- rep(0,each=3)
 max <- c(41,41,1)
@@ -256,29 +260,12 @@ tible <- t(cbind(max,min,Kiviat_Nb))[-3,]
 tible <- as.data.frame(tible,)
 tible <- rbind(tible, Nombre_match_top10_win = nbr_game_top10_win[c(1,3,2),6])
 colnames(tible) <- c("victoire sur \nterre battue","victoire sur terre \ndure","victoire \nsur gazon")
-for(i in 1:6){
+for(i in 1:3){
   tible[,i] <- as.numeric(tible[,i])
 }
 
-radarchart(tible, axistype = 2, seg = 5, axislabcol = 1, plty=1,cglty = 2,
-           cglcol = "blue",plwd = 2, pcol = c("red","black"),title = "Nadal vs Top_10")
+radarchart(tible,axistype=1,pcol=c("red","black"), plwd=3 , cglcol=c("grey"), cglty=1, 
+           axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.6,vlcex=0.8, title = "Nadal vs Top10") 
+
 legend(-2,1.25, legend=c("Resultats Nadal", "Resultats top10"),
-       col=c("red", "black"),lwd = 2,lty=1, cex=0.6,bty="n")
-
-####Surface + rank_point
-atp_Nadal %>% 
-  filter(winner_name == "Rafael Nadal") %>%
-  select(Surface,winner_rank_points) -> Nbr_points_Nadal2013
-
-n <- nrow(Nbr_points_Nadal2013)
-m <- as.numeric(Nbr_points_Nadal2013[1,2])
-
-Nbr_points_Nadal2013 %>% 
-  mutate(Nombre_points = winner_rank_points - rep(m,each=n)) -> Nbr_points_Nadal2013
-
-Nbr_points_Nadal2013 %>% ggplot(mapping = aes(x= Surface,y=Nombre_points , fill=Surface)) +
-  geom_boxplot() +
-  ggtitle("Repartition du nombre de points  en 2013 selon la surface") +
-  scale_fill_manual(values = c("#CC3300","#3399FF"))+
-  ylab("Nombre de points gangné en 2013")+
-  theme_minimal()
+       col=c("red", "black"),lwd = 3 ,lty=1:2, cex=0.6,bty="n")
