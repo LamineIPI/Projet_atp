@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #Diagramme de Kiviat Nadal
 library('DBI')
 library(tidyverse)
@@ -307,7 +306,7 @@ radarchart(Raf_radar,axistype=1 ,
 title("Statistiques récapitulatives de Nadal (en %) ")
 
 dbDisconnect(conn = sqlite_con)
-=======
+
 #Diagramme de Kiviat Nadal
 library('DBI')
 library(tidyverse)
@@ -622,4 +621,3 @@ text(-1, -0.07, labels = "10 (%)", col="#999966")
 text(-0.55, -0.07, labels = "5 (%)", col="#999966")
 
 dbDisconnect(conn = sqlite_con)
->>>>>>> 478d7d9b41911cd075dfceef4003eb9244426c9c
