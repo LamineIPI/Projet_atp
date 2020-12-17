@@ -1,3 +1,12 @@
+#Choix du joueur :
+
+J_Nom = "Rafael"
+J_Prenom = "Nadal"
+
+# Choix de la saison :
+
+annee = "2013"
+
 #Importation de fichiers
 
 # Packages
@@ -8,6 +17,8 @@ library('rmarkdown')
 library('flexdashboard')
 library("ggthemes")
 library('DBI')
+library('fmsb')
+library('forcats')
 
 ### Importation de la atp_players contenant les identifiants des joueurs
 players <- read_csv(file = "data/atp_players.csv",
@@ -38,19 +49,19 @@ atp %>%
                              Surface == "Grass" ~ "Herbe",
                              Surface == "Hard" ~ "Dur")) -> atp
 
-## Focus sur Rafael Nadal
+## Focus sur le joueur
 
-## Copie de l'année 2013
+## Copie de l'année 
 atp_matches_2013 <- atp  %>% # la variable years
-  filter(years =="2013")
+  filter(years ==annee)
 
-# L'identifiant de Nadal
+# L'identifiant du joueur
 players %>% 
-  filter(firstname == 'Rafael' & lastname == 'Nadal') %>%
+  filter(firstname == J_Nom & lastname == J_Prenom) %>%
   select(id) %>% 
   as.numeric() -> id_Nadal
 
-# Filtrer par Nadal
+# Filtrer sur les matchs du joueur
 atp_Nadal <- atp_matches_2013 %>%
   filter(winner_id==id_Nadal | loser_id == id_Nadal) 
 
