@@ -601,7 +601,7 @@ Raf_radar <- data.frame(
   
 )
 
-colnames(Raf_radar)<-c("Break Points Sauvés","Aces*","Deuxiemes Services Gagnants","Premiers Services Gagnants" ) #Contre l'affichage des noms avec des points
+colnames(Raf_radar)<-c("Break Points Sauvés","Aces","Deuxiemes Services Gagnants","Premiers Services Gagnants" ) #Contre l'affichage des noms avec des points
 
 #View(Raf_radar)
 radarchart(Raf_radar,axistype=1 ,
@@ -616,8 +616,17 @@ radarchart(Raf_radar,axistype=1 ,
            vlcex=0.8 
 )
 title("Statistiques récapitulatives de Nadal (en %)")
+gauche <- -(round(Raf_radar[3,2])/10+0.08)
+haut <- (round(Raf_radar[3,1])/100+0.06)
+droite <- (round(Raf_radar[3,4])/100+0.19)
+bas <- -(round(Raf_radar[3,3])/100+0.19)
+
 text(-0.15, -0.07, labels = "0 (%)", col="#999966")
 text(-1, -0.07, labels = "10 (%)", col="#999966")
 text(-0.55, -0.07, labels = "5 (%)", col="#999966")
+text(gauche, 0.07, labels = paste(round(Raf_radar[3,2]),"%"), col="#990000")
+text(0.17, haut, labels =  paste(round(Raf_radar[3,1]),"%"), col="#990000")
+text(droite, 0.07, labels = paste(round(Raf_radar[3,4]),"%"), col="#990000")
+text(0.17, bas, labels = paste(round(Raf_radar[3,3]),"%"), col="#990000")
 
 dbDisconnect(conn = sqlite_con)
