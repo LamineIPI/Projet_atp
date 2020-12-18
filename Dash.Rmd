@@ -108,17 +108,87 @@ Column
 ### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=333}
 
 ```{r cars, cache=TRUE, fig.height=4, fig.width=5}
+## Nb services
 
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_svpt
+tab_w_svpt%>%mutate(svpt=ifelse(Nadal_win==1,w_svpt,l_svpt))->tab_w_svpt
 
+serv_tot <- sum(tab_w_svpt$svpt,na.rm = TRUE)
 
+## Nb Ace 
 
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_ace
+tab_w_ace%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->tab_w_ace
 
+ace_tot <- sum(tab_w_ace$ace,na.rm = TRUE)
 
+##   (1stWon) point remporter premier serveur 
 
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_1stWon
+tab_w_1stWon%>%mutate(fstWon=ifelse(Nadal_win==1,w_1stWon,l_1stWon))->tab_w_1stWon
 
+fstWon_tot <- sum(tab_w_1stWon$fstWon,na.rm = TRUE)
 
+##   (2ndWon) point remporter second service  
 
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_2ndWon
+tab_w_2ndWon%>%mutate(sndWon=ifelse(Nadal_win==1,w_2ndWon,l_2ndWon))->tab_w_2ndWon
 
+sndWon_tot <- sum(tab_w_2ndWon$sndWon,na.rm = TRUE)
+
+##   Nb break points faced 
+
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_bpFaced
+tab_w_bpFaced%>%mutate(bpFaced=ifelse(Nadal_win==1,w_bpFaced,l_bpFaced))->tab_w_bpFaced
+
+w_bpFaced_tot <- sum(tab_w_bpFaced$bpFaced,na.rm = TRUE)
+
+##   Nb break points saved
+
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_bpSaved
+tab_w_bpSaved%>%mutate(bpSaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->tab_w_bpSaved
+
+w_bpSaved_tot <- sum(tab_w_bpSaved$bpSaved,na.rm = TRUE)
+
+##Création de la base pour la diagramme
+
+Raf_radar <- data.frame(
+  "Break Points Sauvés" = c(100,0,(w_bpSaved_tot/w_bpFaced_tot)*100),
+  "Ace" = c(10,0,(ace_tot/serv_tot)*100),
+  "Deuxieme Service Gagnant" = c(100,0,(sndWon_tot/serv_tot)*100),
+  "Premier Service Gagnant" = c(100,0,(fstWon_tot/serv_tot)*100)
+  
+)
+
+colnames(Raf_radar)<-c("Break Points Sauvés","Aces","Deuxiemes \n Services \n Gagnants","Premiers \n Services \n Gagnants" ) #Contre l'affichage des noms avec des points
+
+## Mise en forme diagramme 
+radarchart(Raf_radar,axistype=1 ,
+           
+           #custom polygon
+           pcol=rgb(0.2,0.5,0.5,0.9) , pfcol=rgb(0.2,0.5,0.5,0.5) , plwd=4 , 
+           
+           #custom the grid
+           cglcol="grey", cglty=1, axislabcol="grey", cglwd=0.8,
+           
+           #custom labels
+           vlcex=1
+)
+gauche <- -(round(Raf_radar[3,2])/10+0.08)
+haut <- (round(Raf_radar[3,1])/100+0.06)
+droite <- (round(Raf_radar[3,4])/100+0.19)
+bas <- -(round(Raf_radar[3,3])/100+0.19)
+
+text(-0.15, -0.07, labels = "0 (%)", col="#999966")
+text(-1, -0.07, labels = "10 (%)", col="#999966")
+text(-0.55, -0.07, labels = "5 (%)", col="#999966")
+
+text(gauche, 0.07, labels = paste(round(Raf_radar[3,2]),"%"), col="#990000")
+text(0.17, haut, labels =  paste(round(Raf_radar[3,1]),"%"), col="#990000")
+text(droite, 0.07, labels = paste(round(Raf_radar[3,4]),"%"), col="#990000")
+text(0.17, bas, labels = paste(round(Raf_radar[3,3]),"%"), col="#990000")
+
+dbDisconnect(conn = sqlite_con)
 ```
 
 ### Répartition de tous les matchs en fonction de leur surface {data-height=333}
