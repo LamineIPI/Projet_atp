@@ -34,7 +34,7 @@ valueBox(nb_win, icon = "fa-trophy", color= "red")
 
 ```{r}
 nb_age <- paste0(J_age," ans")
-valueBox(nb_age, icon = "fa-trophy", color= "lightgreen")
+valueBox(nb_age, icon = "fa-birthday-cake", color= "lightgreen")
 ```
 
 ### Nombre de titres remportés
