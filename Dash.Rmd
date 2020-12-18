@@ -5,6 +5,7 @@ date: "15/12/2020"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
+    theme: sandstone
     vertical_layout: scroll
 ---
 ---
@@ -55,7 +56,7 @@ valueBox(nb_match, icon = "fa-clock", color = "lightblue")
 ```
 
 
-### Nombre de Ace maximum sur les matchs où le joueur a gagné
+### Nombre de Ace maximum sur les matchs où `r  J_Prenom` `r  J_Nom` a gagné
 
 ```{r}
 sqlite_con <-dbConnect(drv = RSQLite::SQLite(),
@@ -104,18 +105,20 @@ Column
 
 
 
-### Répartition de tous les matchs en fonction de leur surface {data-height=333}
+### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=333}
 
 ```{r cars, cache=TRUE, fig.height=4, fig.width=5}
-Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
-ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
-  geom_bar(width = 1,stat="identity", color = "white")  + 
-  coord_polar("y",start=0) +
-  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
-  theme_void()  + 
-  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
-            position = position_stack(vjust = 0.5)) +
-  theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 ### Répartition de tous les matchs en fonction de leur surface {data-height=333}
@@ -125,7 +128,6 @@ Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4
 ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
   geom_bar(width = 1,stat="identity", color = "white")  + 
   coord_polar("y",start=0) +
-  labs(caption = "Source : Les auteurs") +
   scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
   theme_void()  + 
   geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
@@ -150,20 +152,65 @@ ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('
 
 ## Overall {data-height=100}
 
-### Répartition de tous les matchs en fonction de leur surface
+### Part de vitoires de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` par rapport au top 10 (en %) {data-height=333}
 
-```{r, cache=TRUE, fig.height=4, fig.width=5}
-Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
-ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
-  geom_bar(width = 1,stat="identity", color = "white")  + 
-  coord_polar("y",start=0) +
-  labs(caption = "Source : Les auteurs") +
-  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
-  theme_void()  + 
-  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
-            position = position_stack(vjust = 0.5)) +
-  theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
+```{r, cache=TRUE, fig.height=5, fig.width=6}
+#Nombre de match gagné des top10 par surface 
+atp_matches_2013 %>%
+  filter((winner_id != id_Nadal & winner_rank < 11) | (loser_id != id_Nadal & loser_rank < 11)) %>%
+  group_by(Surface) %>%
+  summarize(nombre_victoire = n()) -> nbr_game_top10
+
+#Création de la variable "nombre de match joué" pour calculer le taux des gains pour les top10 
+atp_matches_2013 %>%
+  filter(winner_id != id_Nadal & winner_rank < 11) %>%
+  group_by(Surface) %>%
+  summarize(nombre_victoire = n()) %>%
+  mutate(nb_match =nbr_game_top10$nombre_victoire, taux = round(nombre_victoire/nb_match,2)) %>%
+  as.data.frame() -> nbr_game_top10_win 
+
+#Multiplier le taux des gains des top10 par le nombre de match joué par nadal 
+#afin de comparer nadal et les top10
+nbr_game_top10_win <- nbr_game_top10_win %>%
+  mutate(nb_gameNadal = c(41,1,41),victoire_top10=nb_gameNadal*taux)
+
+#Nombre de match gagné de Rafael Nadal par surface
+atp_Nadal %>% 
+  filter(winner_id == id_Nadal) %>%
+  group_by(Surface) %>%
+  summarize(Nombre_match =n()) -> Kiviat_Nb
+
+#Mise en forme du diagramme 
+Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
+min <- rep(0,each=3)
+max <- c(41,41,1)
+tible <- t(cbind(max,min,Kiviat_Nb))[-3,]
+tible <- as.data.frame(tible,)
+tible <- rbind(tible, Nombre_match_top10_win = nbr_game_top10_win[c(1,3,2),6])
+colnames(tible) <- c("Victoire sur \n terre battue","Victoire sur terre \n dure","Victoire \n sur gazon")
+for(i in 1:3){
+  tible[,i] <- as.numeric(tible[,i])
+}
+colors_border=c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9))
+colors_in=c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4))
+radarchart(tible,axistype=1 ,
+
+           #custom polygon
+           pcol=colors_border , pfcol=colors_in , plwd=4 , 
+            
+           #custom the grid
+           cglcol="grey", cglty=1, axislabcol="grey", cglwd=1,
+           
+           #custom labels
+           vlcex= 1
+)
+
+
+legend(-2,1.25, legend=c(J_Nom, "Top 10"),
+       col=c(rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9)),lwd = 3 ,lty=1:2, cex=1,bty="n")
+
 ```
+
 
 ### Tournois disputés et résultats obtenus
 
