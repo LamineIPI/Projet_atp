@@ -1,6 +1,6 @@
 ---
-title: "Dashboard"
-author: "Remontada"
+title: "Saison de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee`"
+author: "Groupe Remontada"
 date: "15/12/2020"
 output: 
   flexdashboard::flex_dashboard:
@@ -9,14 +9,18 @@ output:
 ---
 ---
 
-Column
+Column {data-width=300,data-height=1000}
 --------------------------------
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+### Ratio de victoire 
+
+```{r}
+rate <- round((max(table(atp_Nadal$winner_name))/nrow(atp_Nadal))*100,2)
+gauge(rate, min = 0, max = 100, symbol = '%', gaugeSectors(
+  success = c(80, 100), warning = c(50,79 ), danger = c(0,49)
+))
 ```
 
-## Overall {data-width=300}
 
 ### Nombre de match gagné par le joueur
 
@@ -25,8 +29,7 @@ nb_win <- max(table(atp_Nadal$winner_name))
 valueBox(nb_win, icon = "fa-trophy", color= "red")
 ```
 
-
-### Nombre de titres remportés  
+### Nombre de titres remportés
 
 ```{r}
 nb_titre <- atp_Nadal%>%
@@ -57,11 +60,39 @@ nb_Ace <- as.numeric(str_sub(summary(dbFetch(dbSendQuery(conn = sqlite_con, stat
 valueBox(nb_Ace, icon = "fa-baseball-ball", color = "Blue")
 ```
 
+### Durée moyenne des matchs (en seconde)
 
-Column
+```{r}
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+```
+
+### Durée moyenne des matchs (en seconde)
+
+```{r}
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+```
+
+### Durée moyenne des matchs (en seconde)
+
+```{r}
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+```
+
+### Durée moyenne des matchs (en seconde)
+
+```{r}
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+```
+
+
+Column {data-width=500}
 --------------------------------
 
-```{r cars, cache = TRUE, results = FALSE}
+```{r cars, cache=TRUE, fig.height=4, fig.width=5}
 
 Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
 ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
@@ -69,30 +100,132 @@ ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) +
   coord_polar("y",start=0) +
   labs(caption = "Source : Les auteurs") +
   scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
-  theme_economist()  + 
+  theme_void()  + 
   geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
             position = position_stack(vjust = 0.5)) +
-  ggtitle("Répartition de tous les matchs en fonction de leur surface") +
+  ggtitle("Répartition de tous les matchs \n en fonction de leur surface") +
   theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
 ```
 
-Column
---------------------------------
-```{r, cache = TRUE, results = FALSE}
-#ne marche pas il faut adapter
-# library(fmsb)
-# D%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->D
-# D%>%group_by(Surface)%>%summarise(Nb_ace=sum(ace,na.rm = TRUE))%>%mutate(freq=Nb_ace/sum(Nb_ace),lab=paste0(round(freq*100,0),"%"))->aces
-# 
-# 
-# ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% d ace marqués')+
-#   ggtitle('Ace marqués en fonction de la surface du terrain')+
-#   geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
-#   scale_fill_manual(values=c("#4E84C4","#52854C","#D16103"))+
-#   theme_economist()+
-#   theme(legend.position="right")
-```  
 
-## Slide with Plot
+```{r, cache=TRUE, fig.height=4, fig.width=5}
+
+Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
+ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
+  geom_bar(width = 1,stat="identity", color = "white")  + 
+  coord_polar("y",start=0) +
+  labs(caption = "Source : Les auteurs") +
+  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
+  theme_void()  + 
+  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
+            position = position_stack(vjust = 0.5)) +
+  ggtitle("Répartition de tous les matchs \n en fonction de leur surface") +
+  theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
+```
+
+```{r , cache=TRUE, fig.height=4, fig.width=5}
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
+D%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->D
+
+#surface et ace  je dois penser a faire la freq
+library("ggthemes")
+D%>%group_by(Surface)%>%summarise(Nb_ace=sum(ace,na.rm = TRUE))%>%mutate(freq=Nb_ace/sum(Nb_ace),lab=paste0(round(freq*100,0),"%"))->aces
+
+ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% d ace marqués')+
+  ggtitle('Ace marqués en fonction de \n la surface du terrain')+
+  geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
+ scale_fill_discrete(type = c('Terre battue' = 'chocolate', 'Herbe' = 'chartreuse4', 'Dur' = "deepskyblue4"))+
+  theme_minimal()
+
+```
+
+
+
+Column {data-width=500}
+------------------------------------
+
+
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=4, fig.width=5}
+
+
+atp_Nadal %>%
+  mutate(result =case_when(winner_id == id_Nadal ~ "Victoire",
+                           winner_id != id_Nadal ~ 'Défaite')) %>%
+  select(tourney_id,  tourney_date, tourney_name, tourney_level, Surface, round, result) %>%
+  mutate(tourney_result = case_when(round == 'F' & result == 'Victoire' ~ 'F gagnés', #F gagnés en cas de victoire finale
+                                    result == 'Défaite' ~ paste0(round," ", "perdus") )) %>% # Le rang du tournoi de la défaite sinon
+  filter(!is.na(tourney_result)) %>%
+  select(-round, -result) %>%
+  distinct() %>%
+  arrange(tourney_date)-> tour_Nadal
+
+tour_Nadal%>%
+  group_by(tourney_result)%>%
+  summarise(N = n())%>%
+  ggplot(mapping = aes(x=tourney_result, fill = tourney_result, y = N))+
+  geom_col()+
+  scale_fill_manual(values = c("chartreuse4", "chocolate",  "#A7B800", "#E8B800"))+
+  theme_minimal()+
+  ggtitle("Tournois disputés \n et résultats obtenus") +
+  geom_text(mapping = aes(y = N, label = N)) +
+  labs(y = "Nombre de tournoi", x = 'Résultat du obtenu') +
+  labs(fill = "Résultats obtenus")
+```
+
+```{r, cache=TRUE, fig.height=4, fig.width=5}
+
+Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
+ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
+  geom_bar(width = 1,stat="identity", color = "white")  + 
+  coord_polar("y",start=0) +
+  labs(caption = "Source : Les auteurs") +
+  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
+  theme_void()  + 
+  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
+            position = position_stack(vjust = 0.5)) +
+  ggtitle("Répartition de tous les matchs \n en fonction de leur surface") +
+  theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
+```
+
+```{r, cache=TRUE, fig.height=4, fig.width=5}
+#surface et BALLE DE BREAK sauvé 
+D%>%mutate(bpsaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->D
+D%>%group_by(Surface)%>%summarise(Nb_bpsaved=sum(bpsaved,na.rm = TRUE))%>%mutate(freq=Nb_bpsaved/sum(Nb_bpsaved),lab=paste0(round(freq*100,0),"%"))->bpsaveds
+
+
+ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% de balles de break sauvées')+
+  ggtitle('Balles de break sauvées en fonction \n de la surface du terrain')+
+  geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
+  scale_fill_discrete(type = c('Terre battue' = 'chocolate', 'Herbe' = 'chartreuse4', 'Dur' = "deepskyblue4"))+
+  theme_minimal()
+```
+
+Column {data-width=500}
+------------------------------------
+
+
+
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=12, fig.width=5}
+
+
+atp_Nadal %>%
+  mutate(resultat = ifelse(winner_id==id_Nadal, 'victoire', 'défaite'),
+         Adversaire = ifelse(winner_id==id_Nadal, loser_name, winner_name)) %>%
+  select(winner_name, resultat, Adversaire) %>%
+  group_by(Adversaire, resultat) %>%
+  summarize(Nb_matchs = n())  %>%
+  ggplot(mapping = aes(x = fct_reorder(Adversaire, Nb_matchs, .fun=sum), fill= resultat, y = Nb_matchs)) +
+  geom_col(position = "stack", width = .9) +
+  coord_flip() +
+  scale_fill_discrete(type = c("victoire" = "springgreen3", 'défaite' = "tomato3"))+
+  ylab("Nombre de confrontations") +
+  xlab("Adversaires") +
+  ggtitle("Adversaires rencontrés \n et resultats des confrontations") +
+  theme(plot.title = element_text(hjust = 1)) +
+  theme_minimal() +
+  labs(fill = "Résultat")
+
+```
+
 
 
