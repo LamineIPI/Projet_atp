@@ -5,6 +5,7 @@ date: "15/12/2020"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
+    theme: flatly
     vertical_layout: scroll
 ---
 ---
@@ -106,7 +107,7 @@ Column
 
 ### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=333}
 
-```{r cars, cache=TRUE, fig.height=4, fig.width=5}
+```{r cars, cache=TRUE, fig.height=5, fig.width=6}
 ## Nb services
 
 atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_svpt
