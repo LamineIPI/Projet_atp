@@ -5,7 +5,6 @@ date: "15/12/2020"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
-    theme: sandstone
     vertical_layout: scroll
 ---
 ---
