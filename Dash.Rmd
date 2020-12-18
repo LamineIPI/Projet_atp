@@ -60,32 +60,35 @@ nb_Ace <- as.numeric(str_sub(summary(dbFetch(dbSendQuery(conn = sqlite_con, stat
 valueBox(nb_Ace, icon = "fa-baseball-ball", color = "Blue")
 ```
 
-### Durée moyenne des matchs (en seconde)
-
+### Le maximum des doubles fautes
 ```{r}
-nb_match <- round(summary(atp_Nadal$minutes)[4],0)
-valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
+D%>%mutate(df=ifelse(Nadal_win==1,w_df,l_df))->D
+maxi=round(max(D$df,na.rm = TRUE))
+valueBox(maxi,icon = "fa-table-tennis",color = "green")
 ```
 
-### Durée moyenne des matchs (en seconde)
+### La part des défaites face aux Top 5 
 
 ```{r}
-nb_match <- round(summary(atp_Nadal$minutes)[4],0)
-valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+atp_Nadal%>%filter(loser_name==paste(J_Nom,J_Prenom,sep=" "))%>%select(winner_rank)%>%mutate(classe=cut(winner_rank,c(0,5,max(winner_rank))))%>%group_by(classe)%>%summarise(NB_classe=n())%>%mutate(freq=round((NB_classe/sum(NB_classe))*100))->Winner_Rank
+
+gauge(Winner_Rank$freq[1], min = 0, max = 100, symbol = "%" ,gaugeSectors(
+  danger = c(60, 100), warning = c(40, 59), success = c(0, 39)
+))
+  
 ```
 
-### Durée moyenne des matchs (en seconde)
+### Le nombre de defaites en `r  annee` par rapport aux autres saisons
 
 ```{r}
-nb_match <- round(summary(atp_Nadal$minutes)[4],0)
-valueBox(nb_match, icon = "fa-clock", color = "lightblue")
-```
+atp%>%filter(winner_id==id_Nadal | loser_id == id_Nadal)->atp_all_Nadal
+atp_all_Nadal%>%filter(loser_id==id_Nadal)%>%group_by(years)%>%
+  summarise(Nb_defaite=n())->Nb_defaites_paran
 
-### Durée moyenne des matchs (en seconde)
-
-```{r}
-nb_match <- round(summary(atp_Nadal$minutes)[4],0)
-valueBox(nb_match, icon = "fa-clock", color = "lightblue")
+gauge(as.numeric(Nb_defaites_paran[Nb_defaites_paran$years==annee,"Nb_defaite"]), min = min(Nb_defaites_paran$Nb_defaite), max = max(Nb_defaites_paran$Nb_defaite),gaugeSectors(
+  success = c(0, 5), warning = c(6, 10), danger = c(10, max(Nb_defaites_paran$Nb_defaite))
+))
 ```
 
 
@@ -124,11 +127,10 @@ ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) +
 ```
 
 ```{r , cache=TRUE, fig.height=4, fig.width=5}
-atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->D
 D%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->D
 
-#surface et ace  je dois penser a faire la freq
-library("ggthemes")
+#surface et ace  
 D%>%group_by(Surface)%>%summarise(Nb_ace=sum(ace,na.rm = TRUE))%>%mutate(freq=Nb_ace/sum(Nb_ace),lab=paste0(round(freq*100,0),"%"))->aces
 
 ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% d ace marqués')+
