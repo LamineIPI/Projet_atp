@@ -48,7 +48,7 @@ valueBox(nb_titre, icon = "fa-medal", color= "gold")
 ```
 
 
-### Durée moyenne des matchs (en seconde)
+### Durée moyenne des matchs (en minute)
 
 ```{r}
 nb_match <- round(summary(atp_Nadal$minutes)[4],0)
