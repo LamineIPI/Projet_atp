@@ -1,7 +1,7 @@
 #Choix du joueur :
 
-J_Nom = "Rafael"
-J_Prenom = "Nadal"
+J_Prenom = "Rafael"
+J_Nom = "Nadal"
 
 # Choix de la saison :
 
@@ -19,6 +19,8 @@ library("ggthemes")
 library('DBI')
 library('fmsb')
 library('forcats')
+library("lubridate")
+library('tidyr')
 
 ### Importation de la atp_players contenant les identifiants des joueurs
 players <- read_csv(file = "data/atp_players.csv",
@@ -57,12 +59,21 @@ atp_matches_2013 <- atp  %>% # la variable years
 
 # L'identifiant du joueur
 players %>% 
-  filter(firstname == J_Nom & lastname == J_Prenom) %>%
+  filter(firstname == J_Prenom & lastname == J_Nom) %>%
   select(id) %>% 
   as.numeric() -> id_Nadal
 
 # Filtrer sur les matchs du joueur
 atp_Nadal <- atp_matches_2013 %>%
-  filter(winner_id==id_Nadal | loser_id == id_Nadal) 
+  filter(winner_id==id_Nadal | loser_id == id_Nadal)
+               
+# Conversion de la variable birthday en date et exctraction de l'ann?e de naissance
+players$birthday<- as.Date(as.character(players$birthday), format = "%Y%m%d")
+players %>% 
+  filter(firstname == J_Prenom & lastname == J_Nom) %>%
+  select(birthday) -> J_Naissance
+J_age <- as.data.frame(J_Naissance)
+J_age <- year(J_age[1,1])
+J_age <- year(Sys.Date())-J_age
 
 render("dash.rmd")
