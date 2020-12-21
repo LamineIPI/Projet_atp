@@ -1,19 +1,19 @@
 ---
-title: "Saison de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee`"
+title: "Saison de `r  J_Prenom` `r  J_Nom` (`r J_age` ans) pour la saison `r  annee`"
 author: "Groupe Remontada"
 date: "15/12/2020"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
     theme: flatly
-    vertical_layout: scroll
+    vertical_layout: fill
 ---
 ---
 
 Column {data-width=300,data-height=1000}
 --------------------------------
 
-### Ratio de victoire 
+### Ratio de victoire sur les `r nrow(atp_Nadal)` matchs 
 
 ```{r}
 rate <- round((max(table(atp_Nadal$winner_name))/nrow(atp_Nadal))*100,1)
@@ -23,18 +23,11 @@ gauge(rate, min = 0, max = 100, symbol = '%', gaugeSectors(
 ```
 
 
-### Nombre de match gagné par `r  J_Prenom` `r  J_Nom`
+### Durée moyenne des matchs (en minute)
 
 ```{r}
-nb_win <- max(table(atp_Nadal$winner_name))
-valueBox(nb_win, icon = "fa-trophy", color= "red")
-```
-
-### Age de `r  J_Prenom` `r  J_Nom`
-
-```{r}
-nb_age <- paste0(J_age," ans")
-valueBox(nb_age, icon = "fa-birthday-cake", color= "lightgreen")
+nb_match <- round(summary(atp_Nadal$minutes)[4],0)
+valueBox(nb_match, icon = "fa-clock", color = "lightblue")
 ```
 
 ### Nombre de titres remportés
@@ -45,14 +38,6 @@ nb_titre <- atp_Nadal%>%
   filter(round == "F", resultat == "win")%>%
   summarise(Titres = n())
 valueBox(nb_titre, icon = "fa-medal", color= "gold")
-```
-
-
-### Durée moyenne des matchs (en minute)
-
-```{r}
-nb_match <- round(summary(atp_Nadal$minutes)[4],0)
-valueBox(nb_match, icon = "fa-clock", color = "lightblue")
 ```
 
 
@@ -85,18 +70,6 @@ gauge(Winner_Rank$freq[1], min = 0, max = 100, symbol = "%" ,gaugeSectors(
   danger = c(60, 100), warning = c(40, 59), success = c(0, 39)
 ))
   
-```
-
-### Le nombre de defaites en `r  annee` par rapport aux autres saisons
-
-```{r}
-atp%>%filter(winner_id==id_Nadal | loser_id == id_Nadal)->atp_all_Nadal
-atp_all_Nadal%>%filter(loser_id==id_Nadal)%>%group_by(years)%>%
-  summarise(Nb_defaite=n())->Nb_defaites_paran
-
-gauge(as.numeric(Nb_defaites_paran[Nb_defaites_paran$years==annee,"Nb_defaite"]), min = min(Nb_defaites_paran$Nb_defaite), max = max(Nb_defaites_paran$Nb_defaite),gaugeSectors(
-  success = c(0, 5), warning = c(6, 10), danger = c(10, max(Nb_defaites_paran$Nb_defaite))
-))
 ```
 
 
@@ -191,30 +164,16 @@ text(0.17, bas, labels = paste(round(Raf_radar[3,3]),"%"), col="#990000")
 dbDisconnect(conn = sqlite_con)
 ```
 
-### Répartition de tous les matchs en fonction de leur surface {data-height=333}
+
+### Balles de break sauvées en fonction de la surface du terrain
 
 ```{r, cache=TRUE, fig.height=4, fig.width=5}
-Pourcentage=data.frame(Sol=c("terre battue","herbe","dur"),value=c(49.4,1.2,49.4))
-ggplot(Pourcentage,aes(x=2,y=value,fill=Sol)) + 
-  geom_bar(width = 1,stat="identity", color = "white")  + 
-  coord_polar("y",start=0) +
-  scale_fill_discrete(type = c('terre battue' = 'chocolate', 'herbe' = 'chartreuse4', 'dur' = "deepskyblue4")) + 
-  theme_void()  + 
-  geom_text(aes(label = paste(as.numeric(value/100)*100,"%")),color="black", size=5 ,
-            position = position_stack(vjust = 0.5)) +
-   theme(plot.title = element_text(hjust = 0.5)) + xlim(0.5,2.5)
-```
-
-### Ace marqués en fonction de la surface du terrain {data-height=333}
-
-```{r , cache=TRUE, fig.height=4, fig.width=5}
-atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->D
-D%>%mutate(ace=ifelse(Nadal_win==1,w_ace,l_ace))->D
-#surface et ace  
-D%>%group_by(Surface)%>%summarise(Nb_ace=sum(ace,na.rm = TRUE))%>%mutate(freq=Nb_ace/sum(Nb_ace),lab=paste0(round(freq*100,0),"%"))->aces
-ggplot(aces)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% d ace marqués')+
+#surface et BALLE DE BREAK sauvé 
+D%>%mutate(bpsaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->D
+D%>%group_by(Surface)%>%summarise(Nb_bpsaved=sum(bpsaved,na.rm = TRUE))%>%mutate(freq=Nb_bpsaved/sum(Nb_bpsaved),lab=paste0(round(freq*100,0),"%"))->bpsaveds
+ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% de balles de break sauvées')+
   geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
- scale_fill_discrete(type = c('Terre battue' = 'chocolate', 'Herbe' = 'chartreuse4', 'Dur' = "deepskyblue4"))+
+  scale_fill_discrete(type = c('Terre battue' = 'chocolate', 'Herbe' = 'chartreuse4', 'Dur' = "deepskyblue4"))+
   theme_minimal()
 ```
 
@@ -308,17 +267,7 @@ tour_Nadal%>%
 ```
 
 
-### Balles de break sauvées en fonction de la surface du terrain
 
-```{r, cache=TRUE, fig.height=4, fig.width=5}
-#surface et BALLE DE BREAK sauvé 
-D%>%mutate(bpsaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->D
-D%>%group_by(Surface)%>%summarise(Nb_bpsaved=sum(bpsaved,na.rm = TRUE))%>%mutate(freq=Nb_bpsaved/sum(Nb_bpsaved),lab=paste0(round(freq*100,0),"%"))->bpsaveds
-ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xlab('Surface')+ylab('% de balles de break sauvées')+
-  geom_text(mapping = aes(x=Surface,y = freq, label = lab)) +
-  scale_fill_discrete(type = c('Terre battue' = 'chocolate', 'Herbe' = 'chartreuse4', 'Dur' = "deepskyblue4"))+
-  theme_minimal()
-```
 
 Column {data-width=500}
 ------------------------------------
