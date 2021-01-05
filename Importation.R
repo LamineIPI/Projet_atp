@@ -21,6 +21,8 @@ library('fmsb')
 library('forcats')
 library("lubridate")
 library('tidyr')
+library(rvest)
+library(magick)
 
 ### Importation de la atp_players contenant les identifiants des joueurs
 players <- read_csv(file = "data/atp_players.csv",
