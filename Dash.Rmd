@@ -10,8 +10,26 @@ output:
 ---
 ---
 
-Column {data-width=300,data-height=1000}
+Column {data-width=275,data-height=1000}
 --------------------------------
+
+```{r, cache=TRUE, fig.height=1.8, fig.width=2}
+# Photo du joueur --------------------------------------------------------
+a<-stringr::str_replace(J_Prenom," ", "_") 
+b<-stringr::str_replace(J_Nom," ", "_")
+lien<-paste0("https://fr.wikipedia.org/wiki/",a,"_",b)
+myurl<-try(read_html (lien))
+#ProblÃ¨me liÃ© au prÃ©nom composÃ© FranÃ§ais
+if("try-error" %in% class(myurl)) myurl<-read_html(paste0("https://fr.wikipedia.org/wiki/",
+                                                          stringr::str_replace(J_Prenom," ","-"),"_",
+                                                          stringr::str_replace(J_Nom," ","-")))
+mynode <- myurl %>% 
+  html_node(".infobox_v2 img")
+link <- html_attr(mynode, "src")
+link<-paste0("http:",link)
+img<-image_read(link)
+image_ggplot(img)
+```
 
 ### Ratio de victoire sur les `r nrow(atp_Nadal)` matchs 
 
@@ -73,14 +91,14 @@ gauge(Winner_Rank$freq[1], min = 0, max = 100, symbol = "%" ,gaugeSectors(
 ```
 
 
-Column 
+Column {data-width=550}
 --------------------------------
 
 
 
-### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=333}
+### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=533}
 
-```{r cars, cache=TRUE, fig.height=5, fig.width=6}
+```{r cars, cache=TRUE, fig.height=4, fig.width=4}
 ## Nb services
 
 atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_svpt
@@ -165,9 +183,9 @@ dbDisconnect(conn = sqlite_con)
 ```
 
 
-### Balles de break sauvées en fonction de la surface du terrain
+### Balles de break sauvées en fonction de la surface du terrain {data-height=533}
 
-```{r, cache=TRUE, fig.height=4, fig.width=5}
+```{r, cache=TRUE, fig.height=4.5, fig.width=5}
 #surface et BALLE DE BREAK sauvé 
 D%>%mutate(bpsaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->D
 D%>%group_by(Surface)%>%summarise(Nb_bpsaved=sum(bpsaved,na.rm = TRUE))%>%mutate(freq=Nb_bpsaved/sum(Nb_bpsaved),lab=paste0(round(freq*100,0),"%"))->bpsaveds
@@ -179,9 +197,9 @@ ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xl
 
 
 
-## Overall {data-height=100}
+## Overall {data-height=300}
 
-### Part de vitoires de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` par rapport au top 10 (en %) {data-height=333}
+### Part de vitoires de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` par rapport au top 10 (en %) {data-height=533}
 
 ```{r, cache=TRUE, fig.height=5, fig.width=6}
 #Nombre de match gagné des top10 par surface 
@@ -241,9 +259,9 @@ legend(-2,1.25, legend=c(J_Nom, "Top 10"),
 ```
 
 
-### Tournois disputés et résultats obtenus
+### Tournois disputés et résultats obtenus {data-height=533}
 
-```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=4, fig.width=5}
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=4, fig.width=5.5}
 atp_Nadal %>%
   mutate(result =case_when(winner_id == id_Nadal ~ "Victoire",
                            winner_id != id_Nadal ~ 'Défaite')) %>%
@@ -269,12 +287,12 @@ tour_Nadal%>%
 
 
 
-Column {data-width=500}
+Column {data-width=450}
 ------------------------------------
 
 ### Adversaires rencontrés et resultats des confrontations
 
-```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=13, fig.width=5}
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=13, fig.width=8}
 atp_Nadal %>%
   mutate(resultat = ifelse(winner_id==id_Nadal, 'victoire', 'défaite'),
          Adversaire = ifelse(winner_id==id_Nadal, loser_name, winner_name)) %>%
