@@ -92,6 +92,15 @@ nb <- NbClust(atp_Cluster2_centré, distance = "euclidean", min.nc = 2,
 
 fviz_nbclust(nb)
 
+#### Caractérisation des remontada des non remontada
+atp_Cluster %>%
+  mutate(remontada = ifelse(str_count(score, "-")== 5,
+                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
+                                   ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
+  )%>% select (-score) -> atp_remontada
 
+
+unique(atp_remontada$remontada)
+View(atp_remontada)
 
 
