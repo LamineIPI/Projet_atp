@@ -19,6 +19,7 @@ lst_names <- paste('atp', str_extract(string = lst_data, pattern = "[[:digit:]]{
 lst_tib <- map(.x = lst_data, function (x) read_csv(paste("data/", x, sep = "")))
 names(lst_tib) <- lst_names
 
+
 atp_Cluster <- reduce(.x = lst_tib, .f = bind_rows)
 
 atp_Cluster %>%
@@ -38,6 +39,7 @@ atp_Cluster <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
 atp_Cluster <- filter(atp_Cluster, str_sub(atp_Cluster$score,1,1) <= str_sub(atp_Cluster$score,3,3)) 
 atp_Cluster <- filter(atp_Cluster, str_sub(atp_Cluster$score,5,5) <= str_sub(atp_Cluster$score,7,7)) 
 atp_Cluster2 <- atp_Cluster[,-4]
+
 
 summary(atp_Cluster2)
 str(atp_Cluster2)
@@ -92,6 +94,20 @@ nb <- NbClust(atp_Cluster2_centré, distance = "euclidean", min.nc = 2,
 
 fviz_nbclust(nb)
 
+######################################### Caractéristique de remontada ###############################
+
+atp_Cluster %>% 
+  mutate(remontada = ifelse(str_count(score,"-") == 5,
+                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
+                                  ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
+         ) %>% select(-score) -> atp_remontada
 
 
+## Recherche de caractéristiques
+library(MASS)
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_remontada)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_remontada)
 
+select.modele.bic.back <- step(object = modele.complet, 
+                               scope = list(lower = modele.trivial, upper = modele.complet), 
+                               direction = "backward", k = log(n))
