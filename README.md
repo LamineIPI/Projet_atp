@@ -1,9 +1,13 @@
 # Projet_atp
 Ce projet a pour but d'atteindre les objectifs suivants : 1 – Création d’un dashboard pour visualiser la saison d’un joueur. 2 – Identification des facteurs permettant d’expliquer les retournements de situation (gagner un match en 5 sets en étant mené 2 sets à 0)
 
-Les statistiques et représentations graphiques de notre Dashboard découlent de l'analyse des résultats de la saison 2013 de l'ATP fournis par Sackmann (2017).
+Les statistiques et représentations graphiques de notre Dashboard découlent de l'analyse des résultats de la saison 2013 de l'ATP.
 
-Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013, une année capitale de sa carrière professionnelle. Nadal a joué 83 matchs 
+Le Dashboard est composé de deux parties : la première partie résume l'analyse statistique et graphique d'un jour pour une saison donnée et la seconde partie est réservée aux informations générales concernant le joueur.
+
+Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013.  Durant la saison, Nadal a joué 83 matchs.
+
+Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal :
 
 # Ratio de victoire sur la saison 
 Nadal a gagné près de 91,6% des matchs de toute la saison.
