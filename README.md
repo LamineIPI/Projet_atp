@@ -36,6 +36,11 @@ Le deuxième diagramme de Kiviat met en relation le nombre de match gagnés par 
 
 Nadal a gagné 10 titres et a perdu 7 titres qui se répartissent comme suit : 4 finales, 2 demi-finales et 1 R128.
 
+# Adversaires rencontrés et résultats des confrontations
+
+Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 défaites avec Novak Djokovic avec qi il a eu 6 rencontres, une défaite avec David Ferrer avec qui il a eu 6 rencontres également, une avec Del Portro, une avec Steve Darcis et une avec Horacio Zeballos. 
+
+
 
 
 
