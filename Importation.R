@@ -77,5 +77,23 @@ players %>%
 J_age <- as.data.frame(J_Naissance)
 J_age <- year(J_age[1,1])
 J_age <- year(Sys.Date())-J_age
+               
+# Importation de la base classement -------------------------------------------------------------------------
+lst <- list.files(path = "data/")
+lst_data <- grep(pattern = "^atp_rankings_[[:digit:]]{2}s.csv$", x = lst, value = TRUE)
+lst_names <- paste('atp_rankings_', str_extract(string = lst_data, pattern = "[[:digit:]]{2}"), sep = "") 
+lst_tib <- map(.x = lst_data, function (x) read_csv(paste("data/", x, sep = "")))
+names(lst_tib) <- lst_names
+atp_classement <- reduce(.x = lst_tib, .f = bind_rows)
+
+#Importation du classement actuel
+atp_rankings_current <- read_csv("data/atp_rankings_current.csv",
+                                 col_names = FALSE, locale = locale(date_names = "fr"))
+colnames(atp_rankings_current) <- colnames(atp_classement)
+
+atp_classement %>%
+  bind_rows(atp_rankings_current) %>%
+  mutate(ranking_date = ymd(ranking_date))->atp_classement
+
 
 render("dash.rmd")
