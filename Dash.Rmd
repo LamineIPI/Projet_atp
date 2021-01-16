@@ -1,7 +1,7 @@
 ---
-title: "Saison de `r  J_Prenom` `r  J_Nom` (`r J_age` ans) pour la saison `r  annee`"
+title: "Saison de `r  J_Prenom` `r  J_Nom` pour l'année `r  annee`"
 author: "Groupe Remontada"
-date: "15/12/2020"
+date: "`r Sys.Date()`"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -10,26 +10,11 @@ output:
 ---
 ---
 
+Général
+============================================================
+
 Column {data-width=275,data-height=1000}
 --------------------------------
-
-```{r, cache=TRUE, fig.height=1.8, fig.width=2}
-# Photo du joueur --------------------------------------------------------
-a<-stringr::str_replace(J_Prenom," ", "_") 
-b<-stringr::str_replace(J_Nom," ", "_")
-lien<-paste0("https://fr.wikipedia.org/wiki/",a,"_",b)
-myurl<-try(read_html (lien))
-#ProblÃ¨me liÃ© au prÃ©nom composÃ© FranÃ§ais
-if("try-error" %in% class(myurl)) myurl<-read_html(paste0("https://fr.wikipedia.org/wiki/",
-                                                          stringr::str_replace(J_Prenom," ","-"),"_",
-                                                          stringr::str_replace(J_Nom," ","-")))
-mynode <- myurl %>% 
-  html_node(".infobox_v2 img")
-link <- html_attr(mynode, "src")
-link<-paste0("http:",link)
-img<-image_read(link)
-image_ggplot(img)
-```
 
 ### Ratio de victoire sur les `r nrow(atp_Nadal)` matchs 
 
@@ -309,3 +294,29 @@ atp_Nadal %>%
   theme_minimal() +
   labs(fill = "Résultat")
 ```
+
+
+Informations
+=========================================================================
+
+Column {data-width=50, data-height=100}
+-----------------------------------------
+
+```{r, cache=TRUE, fig.height=6, fig.width=4}
+# Photo du joueur --------------------------------------------------------
+a<-stringr::str_replace(J_Prenom," ", "_") 
+b<-stringr::str_replace(J_Nom," ", "_")
+lien<-paste0("https://fr.wikipedia.org/wiki/",a,"_",b)
+myurl<-try(read_html (lien))
+#ProblÃ¨me liÃ© au prÃ©nom composÃ© FranÃ§ais
+if("try-error" %in% class(myurl)) myurl<-read_html(paste0("https://fr.wikipedia.org/wiki/",
+                                                          stringr::str_replace(J_Prenom," ","-"),"_",
+                                                          stringr::str_replace(J_Nom," ","-")))
+mynode <- myurl %>% 
+  html_node(".infobox_v2 img")
+link <- html_attr(mynode, "src")
+link<-paste0("http:",link)
+img<-image_read(link)
+image_ggplot(img)
+```
+
