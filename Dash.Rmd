@@ -320,7 +320,6 @@ img<-image_read(link)
 image_ggplot(img)
 ```
 
-
 Column {data-width=17, data-height=100}
 -----------------------------------------
 ```{r}
@@ -349,6 +348,7 @@ Nom <- a$J_Nom
 Prenom <- a$J_Prenom
 Main <- a$hand
 Nationalite <- b$V5
+
 ```
 
 
@@ -411,3 +411,4 @@ knitr::kable(realisateurs[1:6 ,c("NOMS", "PRENOMS", "OPTIONS")])
 
 
 ```
+
