@@ -320,3 +320,94 @@ img<-image_read(link)
 image_ggplot(img)
 ```
 
+
+Column {data-width=17, data-height=100}
+-----------------------------------------
+```{r}
+# Information sur le joueur
+col<-c("id","J_Prenom","J_Nom","hand","Bth","Nat")
+colnames(players)<-col
+
+players %>%
+  mutate(hand=case_when(hand=="R"~"Droitier",
+                        hand=="L"~"Gaucher",
+                        hand=='A'~"Ambidextre",
+                        hand=="U"~"Inconnu")) -> a
+
+
+players%>%
+  filter(J_Prenom=="Rafael" & J_Nom=="Nadal")%>%
+  select(id)%>%
+  as.numeric()->id_Nadal
+
+a <- a[which(a$id==id_Nadal),]
+
+b <- fread("https://sql.sh/ressources/sql-pays/sql-pays.csv",encoding = 'UTF-8')
+b <- b[which(b$V4==a$Nat),5]
+
+Nom <- a$J_Nom
+Prenom <- a$J_Prenom
+Main <- a$hand
+Nationalite <- b$V5
+```
+
+
+### Nom du joueur {data-width=10, data-height=10}
+```{r, cache=TRUE} 
+nom = cat(Nom," ", Prenom)
+valueBox(nom,icon = "fa-table-tennis",color = "green")
+```
+
+### Nationalité {data-width=10, data-height=10}
+```{r, cache=TRUE}
+valueBox(Nationalite,icon = "fa-table-tennis",color = "green")
+```
+
+### Age  en  `r annee` {data-width=10, data-height=10}
+```{r, cache=TRUE}
+age = cat(J_age,"ans")
+valueBox(age,icon = "fa-table-tennis",color = "green")
+```
+
+
+### Main dominante {data-width=10, data-height=10}
+```{r, cache=TRUE}
+valueBox(Main ,icon = "fa-table-tennis",color = "green")
+```
+
+### Classement  en  `r annee` {data-width=10, data-height=10}
+```{r, cache=TRUE}
+# classement mondial
+atp_classement%>%
+  mutate(ranking_date=ymd(ranking_date))%>%
+  mutate(date = year(ranking_date)) %>%
+  arrange(desc(ranking_date)) %>%
+  filter(player==id_Nadal, date == as.integer(annee))%>%
+  select(rank)%>%
+  slice(1L)%>%
+  as.numeric()->Class_act
+
+rang = cat("n°",Class_act, "mondial")
+valueBox(rang ,icon = "fa-table-tennis",color = "green")
+```
+
+
+Column {data-width=60, data-height=100}
+----------------------------------------
+
+### Réalisateurs du projet 
+```{r}
+realisateurs = rbind(c("CARRE", "Nolan", "SEP-MATH"),
+                     c("GUEYE","Lamine", "SEP-MATH"),
+                     c("HORNOY","Antoine", "SEP-ECO"),
+                     c("OUBIDAS", "Anas", "SEP-ECO"),
+                     c("SERBOUT", "Nasr", "SEP-MATH"),
+                     c("TCHAKAH", "Koffi", "SEP-ECO"))
+realisateurs =  as.data.frame(realisateurs)
+
+colnames(realisateurs) = c("NOMS", "PRENOMS", "OPTIONS")
+
+knitr::kable(realisateurs[1:6 ,c("NOMS", "PRENOMS", "OPTIONS")])
+
+
+```
