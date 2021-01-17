@@ -271,7 +271,7 @@ tour_Nadal%>%
   summarise(N = n())%>%
   ggplot(mapping = aes(x=tourney_result, fill = tourney_result, y = N))+
   geom_col()+
-  scale_fill_manual(values = c("chartreuse4", "chocolate",  "#A7B800", "#E8B800"))+
+  scale_fill_brewer(palette="Dark2")+
   theme_minimal()+
   geom_text(mapping = aes(y = N, label = N)) +
   labs(y = "Nombre de tournoi", x = 'Résultats') +
@@ -409,7 +409,7 @@ Column {data-width=60, data-height=100}
 realisateurs = rbind(c("CARRE", "Nolan", "SEP-MATH"),
                      c("GUEYE","Lamine", "SEP-MATH"),
                      c("HORNOY","Antoine", "SEP-ECO"),
-                     c("OUBIDAS", "Anas", "SEP-ECO"),
+                     c("OUBIDA", "Anas", "SEP-ECO"),
                      c("SERBOUT", "Nasr", "SEP-MATH"),
                      c("TCHAKAH", "Koffi", "SEP-ECO"))
 realisateurs =  as.data.frame(realisateurs)
