@@ -324,7 +324,7 @@ Column {data-width=17, data-height=100}
 -----------------------------------------
 ```{r}
 # Information sur le joueur
-col<-c("id","J_Prenom","J_Nom","hand","Bth","Nat")
+col<-c("id","J_Prenom1","J_Nom1","hand","Bth","Nat")
 colnames(players)<-col
 
 players %>%
@@ -335,7 +335,7 @@ players %>%
 
 
 players%>%
-  filter(J_Prenom=="Rafael" & J_Nom=="Nadal")%>%
+  filter(J_Prenom1==J_Prenom & J_Nom1==J_Nom)%>%
   select(id)%>%
   as.numeric()->id_Nadal
 
@@ -344,8 +344,8 @@ a <- a[which(a$id==id_Nadal),]
 b <- fread("https://sql.sh/ressources/sql-pays/sql-pays.csv",encoding = 'UTF-8')
 b <- b[which(b$V4==a$Nat),5]
 
-Nom <- a$J_Nom
-Prenom <- a$J_Prenom
+Nom <- a$J_Nom1
+Prenom <- a$J_Prenom1
 Main <- a$hand
 Nationalite <- b$V5
 
