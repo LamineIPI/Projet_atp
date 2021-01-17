@@ -42,7 +42,7 @@ Le maximum des doubles fautes est égal à 6.
 
 ### La part des défaites face au Top 5
 **Description** **:**  
-La part des défaites totalisées est de 71,4%.   
+Le pourcentage des défaites face au top 5 par rapport à la totalité de ses défaites en 2013 est de 71,4%.   
      
 ## Graphiques de représentation
 
