@@ -79,7 +79,7 @@ Column {data-width=550}
 
 ### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=533}
 
-```{r echo=FALSE, fig.height=4, fig.width=4}
+```{r echo=FALSE, fig.height=6, fig.width=6}
 ## Nb services
 
 atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_svpt
@@ -181,62 +181,54 @@ ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xl
 
 ### Part de vitoires de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` par rapport au top 10 (en %) {data-height=533}
 
-```{r, cache=TRUE, fig.height=5, fig.width=6}
+```{r echo=FALSE, fig.height=5, fig.width=6}
 #Nombre de match gagné des top10 par surface 
 atp_matches_2013 %>%
   filter((winner_id != id_Nadal & winner_rank < 11) | (loser_id != id_Nadal & loser_rank < 11)) %>%
   group_by(Surface) %>%
   summarize(nombre_victoire = n()) -> nbr_game_top10
 
-#calculer le taux des gains pour les top10 
+#Création de la variable "nombre de match joué" pour calculer le taux des gains pour les top10 
 atp_matches_2013 %>%
   filter(winner_id != id_Nadal & winner_rank < 11) %>%
   group_by(Surface) %>%
   summarize(nombre_victoire = n()) %>%
-  mutate(nb_match =nbr_game_top10$nombre_victoire, taux_top10 = round(nombre_victoire/nb_match,2)) %>%
+  mutate(nb_match =nbr_game_top10$nombre_victoire, taux = round(nombre_victoire/nb_match,2)) %>%
   as.data.frame() -> nbr_game_top10_win 
-
-taux_top10 <- nbr_game_top10_win[,4]
-
-#calculer le taux des gains pour Rafael Nadal
-
-atp_Nadal %>% 
-  filter(winner_id == id_Nadal) %>%
-  group_by(Surface) %>%
-  summarize(Nombre_victoire =n()) -> Nbr_victoire_Nadal
-
-n = nrow(Nbr_victoire_Nadal)
-if (n < 3){
-  for(i in 1:3-n){
-  Nbr_victoire_Nadal <- rbind(Nbr_victoire_Nadal,c("Herbe",0))
-  break
-  }
-}
-
-Nbr_victoire_Nadal$Nombre_victoire = as.numeric(Nbr_victoire_Nadal$Nombre_victoire)
 
 atp_matches_2013 %>% 
   filter(winner_id == id_Nadal | loser_id == id_Nadal)%>%
   group_by(Surface) %>% 
-  summarize(Nbr_match = n())->Nombre_match_Nadal
+  summarize(Nbr_match = n()) -> Nombre_match_Nadal
 
-Nombre_match_Nadal %>%
-  inner_join(Nbr_victoire_Nadal,by="Surface") -> Res_Nadal
+#Multiplier le taux des gains des top10 par le nombre de match joué par nadal 
+#afin de comparer nadal et les top10
+nbr_game_top10_win <- nbr_game_top10_win %>%
+  mutate(nb_gameNadal = c(30,30,30),victoire_top10=nb_gameNadal*taux)
 
-Res_Nadal %>%
-  mutate(taux_nadal = round(Nombre_victoire/Nbr_match,2)) -> Res_NadalVsTop10
+#Nombre de match gagné de Rafael Nadal par surface
+atp_Nadal %>% 
+  filter(winner_id == id_Nadal) %>%
+  group_by(Surface) %>%
+  summarize(Nombre_match =n()) -> Kiviat_Nb
 
-taux_Nadal <- Res_NadalVsTop10$taux_nadal
+n = nrow(Kiviat_Nb)
+if (nrow(Kiviat_Nb) < 3){
+  for(i in 1:3-n){
+  Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
+  break
+  }
+}
+
 
 #Mise en forme du diagramme 
 
-
 min <- rep(0,each=3)
-max <- rep(1,each=3)
-tible <- t(cbind(max,min,taux_Nadal,taux_top10))
-tible <- as.data.frame(tible)
-colnames(tible) <- c("Victoire sur \n terre dure","Victoire sur terre \n gazon","Victoire \n sur battue")
-
+max <- c(30,30,30)
+tible <- t(cbind(max,min,Kiviat_Nb))[-3,]
+tible <- as.data.frame(tible,)
+tible <- rbind(tible, Nombre_match_top10_win = nbr_game_top10_win[c(1,3,2),6])
+colnames(tible) <- c("Victoire sur \n terre battue","Victoire sur terre \n dure","Victoire \n sur gazon")
 for(i in 1:3){
   tible[,i] <- as.numeric(tible[,i])
 }
@@ -255,7 +247,7 @@ radarchart(tible,axistype=1 ,
 )
 
 
-legend(-2,1.25, legend=c("Top 10",J_Nom),
+legend(-2,1.25, legend=c(J_Nom, "Top 10"),
        col=c(rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9)),lwd = 3 ,lty=1:2, cex=1,bty="n")
 
 ```
