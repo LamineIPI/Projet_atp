@@ -79,7 +79,6 @@ Ce graphique a été choisi afin d'avoir une idée plus claire sur la performanc
 Le deuxième diagramme de Kiviat met en relation le nombre de matchs gagnés par Nadal, du Top 10 par surface et le taux des gains pour les Top 10 par surface.   
      
 **Pourquoi ce graphique ?**   
-
 Ce graphique a été choisi pour évaluer la performance d'un tennisman, en comparant ces résultats avec les résultats des dix premiers au classement. 
 
 
@@ -88,7 +87,6 @@ Ce graphique a été choisi pour évaluer la performance d'un tennisman, en comp
 Nadal a gagné 10 titres et en a 7 qui se répartissent comme suit : 4 finales, 2 demi-finales et 1 R128.   
      
 **Pourquoi ce graphique ?**   
-
 Nous avons choisi de réaliser ce graphique pour observer rapidement les tournois disputés ainsi que les résultats obtenus par le joueur. 
 
 ### Adversaires rencontrés et résultats des confrontations
@@ -96,7 +94,6 @@ Nous avons choisi de réaliser ce graphique pour observer rapidement les tournoi
 Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 défaites avec Novak Djokovic avec qui il a eu 6 rencontres, une défaite avec David Ferrer avec qui il a eu 6 rencontres également, une avec juan Martin Del Portro, une avec Steve Darcis et une avec Horacio Zeballos.    
      
 **Pourquoi ce graphique ?**    
-
 Ce tableau synthétise l'ensemble des matchs réalisés permettant donc de visualiser les victoires et les défaites de notre joueur face à ses différents adversaires. 
 
 
