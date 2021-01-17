@@ -12,7 +12,11 @@ Dans le cadre de notre projet, nous avons choisi d'analyser les performances du 
 Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal :
 Il faut également noté que la visualisation du dashboard est optimale sur un écran en 1920 par 1080. Les captures d'écrans suivantes vous permettront de visualiser le résultat sur un écran de cette envergure :
 
-METTRE LES SCREENS :p
+<img src="images/page1.png" 
+  style="float: center; margin-right: 10px; margin-top: 10px; margin-bottom: 10px;" />
+  
+  <img src="images/page2.png" 
+  style="float: center; margin-right: 10px; margin-top: 10px; margin-bottom: 10px;" />
 
 # Informations choisies 
 
