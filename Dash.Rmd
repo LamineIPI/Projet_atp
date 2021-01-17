@@ -383,19 +383,17 @@ valueBox(age,icon = "fa-table-tennis",color = "green")
 valueBox(Main ,icon = "fa-table-tennis",color = "green")
 ```
 
-### Classement  en  `r annee` {data-width=10, data-height=10}
+### Classement  actuel {data-width=10, data-height=10}
 ```{r, cache=TRUE}
-# classement mondial
+# classement mondial actuel
 atp_classement%>%
-  mutate(ranking_date=ymd(ranking_date))%>%
-  mutate(date = year(ranking_date)) %>%
   arrange(desc(ranking_date)) %>%
-  filter(player==id_Nadal, date == as.integer(annee))%>%
+  filter(player==id_Nadal)%>%
   select(rank)%>%
   slice(1L)%>%
   as.numeric()->Class_act
 
-rang = cat("n°",Class_act, "mondial")
+rang = cat("Actuellement n°",Class_act, "mondial")
 valueBox(rang ,icon = "fa-table-tennis",color = "green")
 ```
 
