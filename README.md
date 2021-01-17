@@ -70,7 +70,7 @@ Le deuxième diagramme de Kiviat met en relation le nombre de matchs gagnés par
      
 **Pourquoi ce graphique ?**   
 
-Ce graphique a été choisi pour évaluer la performance d'un tennisman, en comparant ces résultats avec les dix premiers du classement. 
+Ce graphique a été choisi pour évaluer la performance d'un tennisman, en comparant ces résultats avec les résultats des dix premiers au classement. 
 
 
 ### Tournois disputés et résultats obtenus
