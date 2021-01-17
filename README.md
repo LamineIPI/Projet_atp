@@ -89,13 +89,15 @@ Nadal a gagné 10 titres et en a 7 qui se répartissent comme suit : 4 finales, 
      
 **Pourquoi ce graphique ?**   
 
+Nous avons choisi de réaliser ce graphique pour observer rapidement les tournois disputés ainsi que les résultats obtenus par le joueur. 
+
 ### Adversaires rencontrés et résultats des confrontations
 **Description** **:**   
 Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 défaites avec Novak Djokovic avec qui il a eu 6 rencontres, une défaite avec David Ferrer avec qui il a eu 6 rencontres également, une avec juan Martin Del Portro, une avec Steve Darcis et une avec Horacio Zeballos.    
      
 **Pourquoi ce graphique ?**    
 
-
+Ce tableau synthétise l'ensemble des matchs réalisés permettant donc de visualiser les victoires et les défaites de notre joueur face à ses différents adversaires. 
 
 
 
