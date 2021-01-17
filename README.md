@@ -9,7 +9,7 @@ Le Dashboard est composé de deux parties : la première partie résume l'analys
 
 Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013. Durant la saison, Nadal a joué 83 matchs.
 
-Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal :
+Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal.
 
 ## Informations choisies 
 
@@ -78,7 +78,7 @@ Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 d�
      
 **Pourquoi ce graphique ?**    
 
-
+## Aperçu du dashboard 
 
 
 
