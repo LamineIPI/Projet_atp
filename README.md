@@ -9,21 +9,21 @@ Le Dashboard est composé de deux parties : la première partie résume l'analys
 
 Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013. Durant la saison, Nadal a joué 83 matchs.
 
-Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal.
+Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal :
 
-## Informations choisies 
+# Informations choisies 
+
+## Univariées
+
+Ces Statistiques ont été choisies car elles nous semblaient pertinentes à relever pour la saison d'un joueur.
 
 ### Ratio de victoire sur la saison 
 **Description** **:**  
-Nadal a gagné près de 91,6% des matchs de toute la saison.   
-   
-**Pourquoi ce graphique ?**  
+Nadal a gagné près de 91,6% des matchs de toute la saison.      
 
 ### Durée moyenne des matchs en minutes
 **Description** **:**  
 La durée moyenne des matchs réalisés par Nadal est de 108 minutes.  
-    
-**Pourquoi ce graphique ?**  
 
 ### Nombre de titres remportés
 **Description** **:**   
@@ -32,20 +32,16 @@ Il a remporté 10 titres.
 ### Nombre de Ace maximum sur les matchs où Nadal a gagné
 **Description** **:**  
 Le nombre maximum d'Ace sur les matchs est égal 9.   
-    
-**Pourquoi ce graphique ?**  
 
 ### Le maximum des doubles fautes
 **Description** **:**  
 Le maximum des doubles fautes est égal à 6.   
-     
-**Pourquoi ce graphique ?**  
 
 ### La part des défaites face au Top 5
 **Description** **:**  
 La part des défaites totalisées est de 71,4%.   
      
-**Pourquoi ce graphique ?**    
+## Graphiques de représentation
 
 ### Statistiques récapitulatives
 **Description** **:**  
@@ -78,7 +74,7 @@ Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 d�
      
 **Pourquoi ce graphique ?**    
 
-## Aperçu du dashboard 
+
 
 
 
