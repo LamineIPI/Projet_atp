@@ -12,7 +12,7 @@ Ci-dessous les analyses statistiques et graphiques choisies pour résumer la sai
 ## Informations choisies 
 
 ### Ratio de victoire sur la saison 
-#### **Description** **:**
+**Description** **:**
 Nadal a gagné près de 91,6% des matchs de toute la saison.
 
 ### Durée moyenne des matchs en minutes
