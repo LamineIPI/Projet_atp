@@ -160,7 +160,6 @@ text(0.17, haut, labels =  paste(round(Raf_radar[3,1]),"%"), col="#990000")
 text(droite, 0.07, labels = paste(round(Raf_radar[3,4]),"%"), col="#990000")
 text(0.17, bas, labels = paste(round(Raf_radar[3,3]),"%"), col="#990000")
 
-dbDisconnect(conn = sqlite_con)
 ```
 
 
@@ -342,7 +341,7 @@ players %>%
                         hand=='A'~"Ambidextre",
                         hand=="U"~"Inconnu")) -> a
 
-nat <- a$Nat
+
 
 players%>%
   filter(J_Prenom1==J_Prenom & J_Nom1==J_Nom)%>%
@@ -350,7 +349,7 @@ players%>%
   as.numeric()->id_Nadal
 
 a <- a[which(a$id==id_Nadal),]
-
+nat <- a$Nat
 
 Nom <- a$J_Nom1
 Prenom <- a$J_Prenom1
