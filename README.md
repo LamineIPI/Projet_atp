@@ -58,6 +58,7 @@ Ce graphique a été choisi car il permet de résumer plusieurs statitisques d'u
 L'histogramme en dessous du diagramme de Kiviat indique le nombre de Balles de break sauvées en fonction de la surface du terrain. En 2013, près de 51% de balles de break sauvées ont été réalisées sur une terre battue et 45% sur un terrain dur.  
      
 **Pourquoi ce graphique ?**  
+Ce graphique a été choisi afin d'avoir une idée plus claire sur la performance d'un joueur en terme de balle de break suavées sur chaque type de terrain, on sait qu'en tennis la surface du terrain joue un role trés important dans la performance du joueur en question, raison pour lauqelle on essayé de projeter cela sur notre variable d'intéret (balle de break sauvées).
 
 ### Part de victoires par rapport au Top 10 en pourcentage
 **Description** **:**  
