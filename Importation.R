@@ -1,7 +1,7 @@
 #Choix du joueur :
 
-J_Prenom <— "Rafael"
-J_Nom <— "Nadal"
+J_Prenom <- "Rafael"
+J_Nom <- "Nadal"
 
 # Choix de la saison :
 
