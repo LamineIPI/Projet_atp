@@ -47,19 +47,15 @@ valueBox(nb_titre, icon = "fa-medal", color= "gold")
 ### Nombre de Ace maximum sur les matchs où `r  J_Prenom` `r  J_Nom` a gagné
 
 ```{r}
-sqlite_con <-dbConnect(drv = RSQLite::SQLite(),
-                         dbname = ":memory:")
-dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
-
-nb_Ace <- as.numeric(str_sub(summary(dbFetch(dbSendQuery(conn = sqlite_con, statement
-                       = "SELECT w_ace FROM atp_Nadal WHERE winner_id = '104745'")))[6],9,12))
-valueBox(nb_Ace, icon = "fa-baseball-ball", color = "Blue")
-dbDisconnect(conn = sqlite_con)
+W_Nadal <- atp_Nadal%>%
+  filter(winner_id==id_Nadal)
+Max_ace  <- max(W_Nadal$w_ace,na.rm= TRUE)
+valueBox(Max_ace, icon = "fa-baseball-ball", color = "Blue")
 ```
 
 ### Le maximum des doubles fautes
 ```{r}
-atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name==paste0(J_Prenom,J_Nom,sep=" "),1,0))->D
 D%>%mutate(df=ifelse(Nadal_win==1,w_df,l_df))->D
 maxi=round(max(D$df,na.rm = TRUE))
 valueBox(maxi,icon = "fa-table-tennis",color = "green")
