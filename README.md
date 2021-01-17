@@ -7,7 +7,7 @@ Les statistiques et représentations graphiques de notre Dashboard découlent de
 
 Le Dashboard est composé de deux parties : la première partie résume l'analyse statistique et graphique d'un jour pour une saison donnée et la seconde partie est réservée aux informations générales concernant le joueur.
 
-Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013. Durant la saison, Nadal a joué 83 matchs. Il faut également noter que le code de ce projet est dynamisé. En effet dans le code "Importation.R", si l'on change la date ainsi que le nom et prenom du joueur vous pouvez obtenir les informations d'un autre joueur sur une autre année. 
+Dans le cadre de notre projet, nous avons choisi d'analyser les performances du joueur Rafael Nadal pour l'année 2013. Durant la saison, Nadal a joué 83 matchs. Il faut également noter que le code de ce projet est dynamisé. En effet dans le code "Importation.R", si l'on change la date ainsi que le nom et prénom du joueur on peut obtenir les informations d'un autre joueur sur une autre année. 
 
 Ci-dessous les analyses statistiques et graphiques choisies pour résumer la saison de Nadal :
 Il faut également noté que la visualisation du dashboard est optimale sur un écran en 1920 par 1080. Les captures d'écrans suivantes vous permettront de visualiser le résultat sur un écran de cette envergure :
@@ -22,7 +22,7 @@ Il faut également noté que la visualisation du dashboard est optimale sur un �
 
 ## Univariées
 
-Ces Statistiques ont été choisies car elles nous semblaient pertinentes à relever pour la saison d'un joueur.
+Ces statistiques ont été choisies car elles nous semblaient pertinentes à relever pour la saison d'un joueur.
 
 ### Ratio de victoire sur la saison 
 **Description** **:**  
@@ -55,18 +55,18 @@ Le pourcentage des défaites face au top 5 par rapport à la totalité de ses d�
 Le premier diagramme de Kiviat indique le nombre de services (4%),  le nombres de Ace (69%), les premiers services gagnants (51%) et les deuxièmes services (17%).   
      
 **Pourquoi ce graphique ?**   
-Ce graphique a été choisi car il permet de résumer plusieurs statitisques d'un tennisman sur peu de place. De plus, la structure de ce diagramme permet une comparaisson entre tennisman. En effet, la taille du filet (surface colorée du diagramme) est visuellement représentative ; plus le filet recouvre une surface élevée meilleurs est le joueur (en général) sur ces statistiques.
+Ce graphique a été choisi car il permet de résumer plusieurs statistiques d'un joueur sur peu de place. De plus, la structure de ce diagramme permet une comparaisson entre joueur. En effet, la taille du filet (surface colorée du diagramme) est visuellement représentative ; plus le filet recouvre une surface élevée meilleur est le joueur (en général) sur ces statistiques.
 
 ### Balles de break sauvées en fonction de la surface du terrain
 **Description** **:**  
-L'histogramme en dessous du diagramme de Kiviat indique le nombre de Balles de break sauvées en fonction de la surface du terrain. En 2013, près de 51% de balles de break sauvées ont été réalisées sur une terre battue et 45% sur un terrain dur.  
+L'histogramme en dessous du diagramme de Kiviat indique le nombre de balles de break sauvées en fonction de la surface du terrain. En 2013, près de 51% de balles de break sauvées ont été réalisées sur une terre battue et 45% sur un terrain dur.  
      
 **Pourquoi ce graphique ?**  
-Ce graphique a été choisi afin d'avoir une idée plus claire sur la performance d'un joueur en terme de balle de break suavées sur chaque type de terrain, on sait qu'en tennis la surface du terrain joue un role trés important dans la performance du joueur en question, raison pour lauqelle on essayé de projeter cela sur notre variable d'intéret (balle de break sauvées).
+Ce graphique a été choisi afin d'avoir une idée plus claire sur la performance d'un joueur en terme de balles de break sauvées sur chaque type de terrain, on sait qu'en tennis la surface du terrain joue un role trés important dans la performance du joueur en question, raison pour laquelle nous avons essayé de projeter cela sur notre variable d'intéret (balle de break sauvées).
 
 ### Part de victoires par rapport au Top 10 en pourcentage
 **Description** **:**  
-Le deuxième diagramme de Kiviat met en relation le nombre de match gagnés par Nadal, du Top 10 par surface et le taux des gains pour les Top 10 par surface.   
+Le deuxième diagramme de Kiviat met en relation le nombre de matchs gagnés par Nadal, du Top 10 par surface et le taux des gains pour les Top 10 par surface.   
      
 **Pourquoi ce graphique ?**   
 
