@@ -19,7 +19,7 @@ Il faut également noté que la visualisation du dashboard est optimale sur un �
   style="float: center; margin-right: 10px; margin-top: 10px; margin-bottom: 10px;" />
   
   # Exécution du programme à partir d'un terminal
-(Creer un dossier nommé "data" contenant toute les bases de données atp.)
+(Creer un dossier nommé "data" contenant toutes les bases de données atp.)
 
   Ouvrir un terminal et taper les lignes suivantes :
  - git clone https://github.com/LamineIPI/Projet_atp.git
