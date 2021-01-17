@@ -16,7 +16,7 @@ Ci-dessous les analyses statistiques et graphiques choisies pour résumer la sai
 Nadal a gagné près de 91,6% des matchs de toute la saison.
 
 ### Durée moyenne des matchs en minutes
-#### Description :
+**Description** **:**  
 La durée moyenne des matchs réalisés par Nadal est de 108 minutes.
 
 ### Nombre de titres remportés
@@ -24,43 +24,45 @@ La durée moyenne des matchs réalisés par Nadal est de 108 minutes.
 Il a remporté 10 titres. 
 
 ### Nombre de Ace maximum sur les matchs où Nadal a gagné
-#### **Description :**
+**Description** **:**  
 Le nombre maximum d'Ace sur les matchs est égal 9.
+**Pourquoi ce graphique ?**  
 
 ### Le maximum des doubles fautes
-#### Description :
+**Description** **:**  
 Le maximum des doubles fautes est égal à 6.
+**Pourquoi ce graphique ?**  
 
 ### La part des défaites face au Top 5
-#### Description
+**Description** **:**  
 La part des défaites totalisées est de 71,4%.
-#### Pourquoi ce graphique ?
+**Pourquoi ce graphique ?**  
 
 ### Statistiques récapitulatives
-#### Description :
+**Description** **:**  
 Le premier diagramme de Kiviat indique le nombre de services (4%),  le nombres de Ace (69%), les premiers services gagnants (51%) et les deuxièmes services (17%).
-#### Pourquoi ce graphique ? 
+**Pourquoi ce graphique ?**  
 Ce graphique a été choisi car il permet de résumer plusieurs statitisques d'un tennisman sur peu de place. De plus, la structure de ce diagramme permet une comparaisson entre tennisman. En effet, la taille du filet (surface colorée du diagramme) est visuellement représentative ; plus le filet recouvre une surface élevée meilleurs est le joueur (en général) sur ces statistiques.
 
 ### Balles de break sauvées en fonction de la surface du terrain
-#### Description :
+**Description** **:**  
 L'histogramme en dessous du diagramme de Kiviat indique le nombre de Balles de break sauvées en fonction de la surface du terrain. En 2013, près de 51% de balles de break sauvées ont été réalisées sur une terre battue et 45% sur un terrain dur.
-#### Pourquoi ce graphique ?
+**Pourquoi ce graphique ?**  
 
 ### Part de victoires par rapport au Top 10 en pourcentage
-#### Description :
+**Description** **:**  
 Le deuxième diagramme de Kiviat met en relation le nombre de match gagnés par Nadal, du Top 10 par surface et le taux des gains pour les Top 10 par surface.
-#### Pourquoi ce graphique ?
+**Pourquoi ce graphique ?**  
 
 ### Tournois disputés et résultats obtenus
-#### Description :
+**Description** **:**  
 Nadal a gagné 10 titres et en a 7 qui se répartissent comme suit : 4 finales, 2 demi-finales et 1 R128.
-#### Pourquoi ce graphique ?
+**Pourquoi ce graphique ?**  
 
 ### Adversaires rencontrés et résultats des confrontations
-#### Description :
+**Description** **:**  
 Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 défaites avec Novak Djokovic avec qui il a eu 6 rencontres, une défaite avec David Ferrer avec qui il a eu 6 rencontres également, une avec juan Martin Del Portro, une avec Steve Darcis et une avec Horacio Zeballos.
-#### Pourquoi ce graphique ?
+**Pourquoi ce graphique ?**  
 
 
 
