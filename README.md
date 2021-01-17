@@ -70,6 +70,9 @@ Le deuxième diagramme de Kiviat met en relation le nombre de matchs gagnés par
      
 **Pourquoi ce graphique ?**   
 
+Ce graphique a été choisi pour évaluer la performance d'un tennisman, en comparant ces résultats avec les dix premiers du classement. 
+
+
 ### Tournois disputés et résultats obtenus
 **Description** **:**   
 Nadal a gagné 10 titres et en a 7 qui se répartissent comme suit : 4 finales, 2 demi-finales et 1 R128.   
