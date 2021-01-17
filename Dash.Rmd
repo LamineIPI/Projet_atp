@@ -201,10 +201,15 @@ atp_matches_2013 %>%
   mutate(nb_match =nbr_game_top10$nombre_victoire, taux = round(nombre_victoire/nb_match,2)) %>%
   as.data.frame() -> nbr_game_top10_win 
 
+atp_matches_2013 %>% 
+  filter(winner_id == id_Nadal | loser_id == id_Nadal)%>%
+  group_by(Surface) %>% 
+  summarize(Nbr_match = n()) -> Nombre_match_Nadal
+
 #Multiplier le taux des gains des top10 par le nombre de match joué par nadal 
 #afin de comparer nadal et les top10
 nbr_game_top10_win <- nbr_game_top10_win %>%
-  mutate(nb_gameNadal = c(41,1,41),victoire_top10=nb_gameNadal*taux)
+  mutate(nb_gameNadal = c(30,30,30),victoire_top10=nb_gameNadal*taux)
 
 #Nombre de match gagné de Rafael Nadal par surface
 atp_Nadal %>% 
@@ -212,10 +217,19 @@ atp_Nadal %>%
   group_by(Surface) %>%
   summarize(Nombre_match =n()) -> Kiviat_Nb
 
+n = nrow(Kiviat_Nb)
+if (nrow(Kiviat_Nb) < 3){
+  for(i in 1:3-n){
+  Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
+  break
+  }
+}
+
+
 #Mise en forme du diagramme 
-Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
+
 min <- rep(0,each=3)
-max <- c(41,41,1)
+max <- c(30,30,30)
 tible <- t(cbind(max,min,Kiviat_Nb))[-3,]
 tible <- as.data.frame(tible,)
 tible <- rbind(tible, Nombre_match_top10_win = nbr_game_top10_win[c(1,3,2),6])
@@ -242,7 +256,6 @@ legend(-2,1.25, legend=c(J_Nom, "Top 10"),
        col=c(rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9)),lwd = 3 ,lty=1:2, cex=1,bty="n")
 
 ```
-
 
 ### Tournois disputés et résultats obtenus {data-height=533}
 
