@@ -17,6 +17,16 @@ Il faut également noté que la visualisation du dashboard est optimale sur un �
   
   <img src="images/page2.png" 
   style="float: center; margin-right: 10px; margin-top: 10px; margin-bottom: 10px;" />
+  
+  # Exécution du programme à partir d'un terminal
+(Creer un dossier nommé "data" contenant toute les bases de données atp.)
+
+  Ouvrir un terminal et taper les lignes suivantes :
+ - git clone https://github.com/LamineIPI/Projet_atp.git
+ - cd Projet_atp
+ - R CMD BATCH Importation.R
+ 
+ Un fichier Dash.html est ensuite créé dans le dossier Projet_atp. Pour afficher le Dashboard ouvrez ce fichier dans un navigateur internet.
 
 # Informations choisies 
 
