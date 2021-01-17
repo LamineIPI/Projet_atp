@@ -55,7 +55,7 @@ valueBox(Max_ace, icon = "fa-baseball-ball", color = "Blue")
 
 ### Le maximum des doubles fautes
 ```{r}
-atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name==paste0(J_Prenom,J_Nom,sep=" "),1,0))->D
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name==paste(J_Prenom,J_Nom,sep=" "),1,0))->D
 D%>%mutate(df=ifelse(Nadal_win==1,w_df,l_df))->D
 maxi=round(max(D$df,na.rm = TRUE))
 valueBox(maxi,icon = "fa-table-tennis",color = "green")
