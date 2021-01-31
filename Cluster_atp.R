@@ -12,6 +12,7 @@ library('purrr')
 library(NbClust)
 library(cluster)
 library(factoextra)
+library('stringr')
 
 lst <- list.files(path = "data/")
 lst_data <- grep(pattern = "^atp_matches_[[:digit:]]{4}.csv$", x = lst, value = TRUE)
@@ -33,21 +34,39 @@ atp_Cluster %>%
 
 
 
+a#on sélectionne juste les colonnes qui nous intéresse 
+
 atp_Cluster <- atp_Cluster[,c(15,16,23,24,27:45)]
 atp_Cluster <- drop_na(atp_Cluster)
-atp_Cluster <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
-atp_Cluster <- filter(atp_Cluster, str_sub(atp_Cluster$score,1,1) <= str_sub(atp_Cluster$score,3,3)) 
-atp_Cluster <- filter(atp_Cluster, str_sub(atp_Cluster$score,5,5) <= str_sub(atp_Cluster$score,7,7)) 
-atp_Cluster2 <- atp_Cluster[,-4]
 
+# On créé atp_remontada_all qui est une base de données avec la variable en plus donnant la remontada ou non 0 ou 1
+atp_Cluster %>% 
+  mutate(remontada = ifelse(str_count(score,"-") == 5,
+                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
+                                   ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
+  ) -> atp_remontada_all
 
-summary(atp_Cluster2)
-str(atp_Cluster2)
-head(atp_Cluster2,n = 4)
+#on récupère seulement les remontadas
+atp_remontada_seul <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
+atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,1,1) <= str_sub(atp_remontada_seul$score,3,3))
+atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,5,5) <= str_sub(atp_remontada_seul$score,7,7))
+atp_remontada_seul <- atp_remontada_seul[,-4]
 
-pairs(atp_Cluster2) 
-atp_Cluster2_centré<- scale(atp_Cluster2)
-dist <-  dist(atp_Cluster2_centré)
+#atp_cluster_test donne une bdd moitié remontada moitié matchs normaux
+atp_Cluster %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
+atp_moit<- atp_moit[sample(1:nrow(atp_moit), 100, replace=FALSE), ]
+atp_moit_rem <- atp_remontada_seul[sample(1:nrow(atp_remontada_seul), 100, replace=FALSE), ]
+
+atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
+atp_cluster_test <- atp_cluster_test[,-4]
+
+summary(atp_cluster_test)
+str(atp_cluster_test)
+head(atp_cluster_test,n = 4)
+
+pairs(atp_cluster_test) 
+atp_Cluster2_centré<- scale(atp_cluster_test)
+dist <-  dist(atp_cluster_test)
 dist
 CAH <- hclust(dist)
 CAH2 <- hclust(dist,method ="ward.D2")
@@ -93,7 +112,28 @@ nb <- NbClust(atp_Cluster2_centré, distance = "euclidean", min.nc = 2,
               max.nc = 10, method = "kmeans")
 
 fviz_nbclust(nb)
+#Le nombre optimal de cluster semble donc être de deux Clusters 
 
+atp_Cluster2k <- kmeans(atp_Cluster2_centré,2)
+fviz_cluster(atp_Cluster2k, data = atp_Cluster2_centré,
+             geom ="point",
+             ellipse.type = "convex",#ou norm (si repartition gaussienne)
+             ggtheme = theme_bw()
+)
+# Atp sur le centrage réduction 
+
+dist <-  dist(atp_Cluster2_centré)
+dist
+CAH <- hclust(dist)
+CAH2 <- hclust(dist,method ="ward.D2")
+
+plot(CAH,main = "Dendrogramme ")
+rect.hclust(CAH, k=2)#Hauteur de coupe 3 pour prendre 
+plot(CAH2,main = "Dendrogramme en Ward.D2")
+rect.hclust(CAH2, k=2)#Hauteur de coupe 3 pour prendre 
+#On le regarde de bas en haut,attention ici height ne veut pas dire grand chose c'est juste la hauteur
+               
+       
 ######################################### Caractéristique de remontada ###############################
 
 atp_Cluster %>% 
