@@ -50,7 +50,6 @@ atp_Cluster %>%
 atp_remontada_seul <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
 atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,1,1) <= str_sub(atp_remontada_seul$score,3,3))
 atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,5,5) <= str_sub(atp_remontada_seul$score,7,7))
-atp_remontada_seul <- atp_remontada_seul[,-4]
 
 #atp_cluster_test donne une bdd moitié remontada moitié matchs normaux
 atp_Cluster %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
@@ -58,6 +57,11 @@ atp_moit<- atp_moit[sample(1:nrow(atp_moit), 100, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_seul[sample(1:nrow(atp_remontada_seul), 100, replace=FALSE), ]
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
+atp_cluster_test %>% 
+  mutate(remontada = ifelse(str_count(score,"-") == 5,
+                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
+                                   ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
+  ) -> atp_cluster_test
 atp_cluster_test <- atp_cluster_test[,-4]
 
 summary(atp_cluster_test)
@@ -137,21 +141,21 @@ rect.hclust(CAH2, k=2)#Hauteur de coupe 3 pour prendre
 
 library('rpart') # For computing classification tree
 library('rattle') # For displaying nicely classification trees prodiced by rpart
-
+library('tree') #For growing a single tree and pruning it
 
 #### Extracting training and test datasets ####
 set.seed(234)
-N <- nrow(atp_remontada_all)
+N <- nrow(atp_cluster_test)
 sel <- sample(1:N, size = 25, replace = FALSE)
-atp_remontada_all <- atp_remontada_all[,-c(1:4)]
-atp_remontada_all <- atp_remontada_all[,-c(11:19)]
-atp_train <- atp_remontada_all[setdiff(1:N, sel),]
-atp_test <- atp_remontada_all[sel,]
+atp_cluster_test <- atp_cluster_test[,-c(1:3)]
+atp_cluster_test <- atp_cluster_test[,-c(11:19)]
+atp_train <- atp_cluster_test[setdiff(1:N, sel),]
+atp_test <- atp_cluster_test[sel,]
 
 #### Growing a tree with default parameters ####
-## for explaining "adequation" with resect to "sexe", "classe_age", "mois", "jour", "courrier", "suspicion diagnostic", "appareil"
 atp_tree1 <- rpart(formula = remontada ~ .,
-                   data = atp_train)
+                   data = atp_train,
+                    control = tree.control(nobs = nrow(atp_train), mindev = 0))
 atp_tree1 # Displaying tree in console
 fancyRpartPlot(model = atp_tree1) #A pretty representation of the classification tree
 
@@ -160,26 +164,11 @@ plot(atp_tree1)
 par(cex=0.7)
 text(atp_tree1, pretty=0)
 
-# ## Prediction on the testing set set
-# pred_atp1 <- predict(atp_tree1, atp_test, type='class')
-# table(pred_atp1, atp_test$remontada) -> test_classification
-# #misclassification rate :
-# (test_classification[1,2] + test_classification[2,1])/sum(test_classification)
-
-
 #### Growing a deep tree by adjusting control parameters ####
 atp_tree2 <- rpart(formula = remontada ~ .,
                    data = atp_train,
                    control = rpart.control(minsplit = 2, cp = 0))
 fancyRpartPlot(model = atp_tree2)
-
-#### Pruning the tree, by hand ####
-A <- 100
-nb_nodes <- numeric(A)
-nb_cut <- numeric(A)
-train_miscl_rate <- numeric(A)
-test_miscl_rate <- numeric(A)
-
 
 
 #### Bootstrap aggregating ####
@@ -225,13 +214,6 @@ tx_err_rf # DÃ©sastreux...
                
                
 ######################################### Caractéristique de remontada ###############################
-
-atp_Cluster %>% 
-  mutate(remontada = ifelse(str_count(score,"-") == 5,
-                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
-                                  ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
-         ) %>% select(-score) -> atp_remontada
-
 
 ## Recherche de caractéristiques
 library(MASS)
