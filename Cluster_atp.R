@@ -133,7 +133,97 @@ plot(CAH2,main = "Dendrogramme en Ward.D2")
 rect.hclust(CAH2, k=2)#Hauteur de coupe 3 pour prendre 
 #On le regarde de bas en haut,attention ici height ne veut pas dire grand chose c'est juste la hauteur
                
-       
+################ TREE ######################################
+
+library('rpart') # For computing classification tree
+library('rattle') # For displaying nicely classification trees prodiced by rpart
+
+
+#### Extracting training and test datasets ####
+set.seed(234)
+N <- nrow(atp_remontada_all)
+sel <- sample(1:N, size = 25, replace = FALSE)
+atp_remontada_all <- atp_remontada_all[,-c(1:4)]
+atp_remontada_all <- atp_remontada_all[,-c(11:19)]
+atp_train <- atp_remontada_all[setdiff(1:N, sel),]
+atp_test <- atp_remontada_all[sel,]
+
+#### Growing a tree with default parameters ####
+## for explaining "adequation" with resect to "sexe", "classe_age", "mois", "jour", "courrier", "suspicion diagnostic", "appareil"
+atp_tree1 <- rpart(formula = remontada ~ .,
+                   data = atp_train)
+atp_tree1 # Displaying tree in console
+fancyRpartPlot(model = atp_tree1) #A pretty representation of the classification tree
+
+#A basic representation, but with branch length proportional to criteria loss 
+plot(atp_tree1)
+par(cex=0.7)
+text(atp_tree1, pretty=0)
+
+# ## Prediction on the testing set set
+# pred_atp1 <- predict(atp_tree1, atp_test, type='class')
+# table(pred_atp1, atp_test$remontada) -> test_classification
+# #misclassification rate :
+# (test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+
+
+#### Growing a deep tree by adjusting control parameters ####
+atp_tree2 <- rpart(formula = remontada ~ .,
+                   data = atp_train,
+                   control = rpart.control(minsplit = 2, cp = 0))
+fancyRpartPlot(model = atp_tree2)
+
+#### Pruning the tree, by hand ####
+A <- 100
+nb_nodes <- numeric(A)
+nb_cut <- numeric(A)
+train_miscl_rate <- numeric(A)
+test_miscl_rate <- numeric(A)
+
+
+
+#### Bootstrap aggregating ####
+
+## Loading package
+library('randomForest')
+## Preparing data
+##removing incomplete data
+# La fonction randomForest s'accomode mal des valeurs manquantes
+
+# On renomme la variable `Suspicion diagnostic` dont le nom non standard semble poser probleme.
+# On dÃ©clare adequation en tant que facteur pour obtenir des arbres de classification
+
+set.seed(123)
+randomForest(remontada ~  .,
+             data = atp_remontada_all, 
+             mtry =5,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = atp_test) -> yhat
+# Confusion matrix for bagging
+table(atp_test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+
+#### Random forest ####
+set.seed(123)
+randomForest(remontada ~ .,
+             data = atp_remontada_all, 
+             mtry = 5,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_rf
+predict(atp_rf, newdata = atp_test) -> yhat
+# Confusion matrix for random forest
+table(atp_test$remontada, yhat) -> conf_mat
+tx_err_rf <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_rf # DÃ©sastreux...
+
+               
+               
+               
 ######################################### Caractéristique de remontada ###############################
 
 atp_Cluster %>% 
