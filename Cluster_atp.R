@@ -53,8 +53,8 @@ atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$scor
 
 #atp_cluster_test donne une bdd moitié remontada moitié matchs normaux
 atp_Cluster %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
-atp_moit<- atp_moit[sample(1:nrow(atp_moit), 100, replace=FALSE), ]
-atp_moit_rem <- atp_remontada_seul[sample(1:nrow(atp_remontada_seul), 100, replace=FALSE), ]
+atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
+atp_moit_rem <- atp_remontada_seul
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
 atp_cluster_test %>% 
