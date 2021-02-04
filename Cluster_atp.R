@@ -48,11 +48,12 @@ atp_Cluster %>%
 
 #que les 5 sets et selection des variables pertinentes
 atp_remontada_all  <- filter(atp_remontada_all, str_count(atp_remontada_all$score,"-") == 5)
-atp_remontada_all  <- atp_remontada_all[,c(4:8,13:17,22:24)]
+atp_remontada_all  <- atp_remontada_all[,c(4:24)]
 
 #selection de la base non remontada
 atp_remontada_all %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
 #Prendre le méme nombre de ligne pr les deux base (Remontada et non remontada)
+set.seed(123)
 atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
@@ -218,3 +219,7 @@ modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, dat
 select.modele.bic.back <- step(object = modele.complet, 
                                scope = list(lower = modele.trivial, upper = modele.complet), 
                                direction = "backward", k = log(n))
+
+
+
+
