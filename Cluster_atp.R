@@ -34,7 +34,7 @@ atp_Cluster %>%
 
 
 
-a#on sélectionne juste les colonnes qui nous intéresse 
+#on sélectionne juste les colonnes qui nous intéresse 
 
 atp_Cluster <- atp_Cluster[,c(15,16,23,24,27:45)]
 atp_Cluster <- drop_na(atp_Cluster)
@@ -46,23 +46,19 @@ atp_Cluster %>%
                                    ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
   ) -> atp_remontada_all
 
-#on récupère seulement les remontadas
-atp_remontada_seul <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
-atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,1,1) <= str_sub(atp_remontada_seul$score,3,3))
-atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,5,5) <= str_sub(atp_remontada_seul$score,7,7))
+#que les 5 sets et selection des variables pertinentes
+atp_remontada_all  <- filter(atp_remontada_all, str_count(atp_remontada_all$score,"-") == 5)
+atp_remontada_all  <- atp_remontada_all[,c(4:8,13:17,22:24)]
 
-#atp_cluster_test donne une bdd moitié remontada moitié matchs normaux
-atp_Cluster %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
-atp_moit<- atp_moit[sample(1:nrow(atp_moit), 100, replace=FALSE), ]
-atp_moit_rem <- atp_remontada_seul[sample(1:nrow(atp_remontada_seul), 100, replace=FALSE), ]
+#selection de la base non remontada
+atp_remontada_all %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
+#Prendre le méme nombre de ligne pr les deux base (Remontada et non remontada)
+set.seed(123)
+atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
+atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
-atp_cluster_test %>% 
-  mutate(remontada = ifelse(str_count(score,"-") == 5,
-                            ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
-                                   ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
-  ) -> atp_cluster_test
-atp_cluster_test <- atp_cluster_test[,-4]
+atp_cluster_test <- atp_cluster_test[,-1]
 
 summary(atp_cluster_test)
 str(atp_cluster_test)
