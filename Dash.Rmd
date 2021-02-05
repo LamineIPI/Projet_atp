@@ -18,7 +18,7 @@ Column {data-width=275,data-height=1000}
 
 ### Ratio de victoire sur les `r nrow(atp_Nadal)` matchs 
 
-```{r echo=FALSE}
+```{r}
 rate <- round((max(table(atp_Nadal$winner_name))/nrow(atp_Nadal))*100,1)
 gauge(rate, min = 0, max = 100, symbol = '%', gaugeSectors(
   success = c(80, 100), warning = c(50,79 ), danger = c(0,49)
@@ -28,14 +28,14 @@ gauge(rate, min = 0, max = 100, symbol = '%', gaugeSectors(
 
 ### Durée moyenne des matchs (en minute)
 
-```{r echo=FALSE}
+```{r}
 nb_match <- round(summary(atp_Nadal$minutes)[4],0)
 valueBox(nb_match, icon = "fa-clock", color = "lightblue")
 ```
 
 ### Nombre de titres remportés
 
-```{r echo=FALSE}
+```{r}
 nb_titre <- atp_Nadal%>%
   mutate(resultat = ifelse(winner_id==id_Nadal, 'win', 'lost'))%>%
   filter(round == "F", resultat == "win")%>%
@@ -46,16 +46,20 @@ valueBox(nb_titre, icon = "fa-medal", color= "gold")
 
 ### Nombre de Ace maximum sur les matchs où `r  J_Prenom` `r  J_Nom` a gagné
 
-```{r echo=FALSE}
-W_Nadal <- atp_Nadal%>%
-  filter(winner_id==id_Nadal)
-Max_ace  <- max(W_Nadal$w_ace,na.rm= TRUE)
-valueBox(Max_ace, icon = "fa-baseball-ball", color = "Blue")
+```{r}
+sqlite_con <-dbConnect(drv = RSQLite::SQLite(),
+                         dbname = ":memory:")
+dbWriteTable(conn = sqlite_con, name = "atp_Nadal", value = atp_Nadal)
+
+nb_Ace <- as.numeric(str_sub(summary(dbFetch(dbSendQuery(conn = sqlite_con, statement
+                       = "SELECT w_ace FROM atp_Nadal WHERE winner_id = '104745'")))[6],9,12))
+valueBox(nb_Ace, icon = "fa-baseball-ball", color = "Blue")
+dbDisconnect(conn = sqlite_con)
 ```
 
 ### Le maximum des doubles fautes
-```{r echo=FALSE}
-atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name==paste(J_Prenom,J_Nom,sep=" "),1,0))->D
+```{r}
+atp_Nadal%>%mutate(Nadal_win=ifelse(winner_name=='Rafael Nadal',1,0))->D
 D%>%mutate(df=ifelse(Nadal_win==1,w_df,l_df))->D
 maxi=round(max(D$df,na.rm = TRUE))
 valueBox(maxi,icon = "fa-table-tennis",color = "green")
@@ -63,7 +67,7 @@ valueBox(maxi,icon = "fa-table-tennis",color = "green")
 
 ### La part des défaites face aux Top 5 
 
-```{r echo=FALSE}
+```{r}
 atp_Nadal%>%filter(loser_name==paste(J_Prenom,J_Nom,sep=" "))%>%select(winner_rank)%>%mutate(classe=cut(winner_rank,c(0,5,max(winner_rank))))%>%group_by(classe)%>%summarise(NB_classe=n())%>%mutate(freq=round((NB_classe/sum(NB_classe))*100,1))->Winner_Rank
 gauge(Winner_Rank$freq[1], min = 0, max = 100, symbol = "%" ,gaugeSectors(
   danger = c(60, 100), warning = c(40, 59), success = c(0, 39)
@@ -79,7 +83,7 @@ Column {data-width=550}
 
 ### Statistiques récapitulatives de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` (en %) {data-height=533}
 
-```{r echo=FALSE, fig.height=6, fig.width=6}
+```{r cars, cache=TRUE, fig.height=4, fig.width=4}
 ## Nb services
 
 atp_Nadal%>%mutate(Nadal_win=ifelse(winner_id==id_Nadal,1,0))->tab_w_svpt
@@ -160,12 +164,13 @@ text(0.17, haut, labels =  paste(round(Raf_radar[3,1]),"%"), col="#990000")
 text(droite, 0.07, labels = paste(round(Raf_radar[3,4]),"%"), col="#990000")
 text(0.17, bas, labels = paste(round(Raf_radar[3,3]),"%"), col="#990000")
 
+dbDisconnect(conn = sqlite_con)
 ```
 
 
 ### Balles de break sauvées en fonction de la surface du terrain {data-height=533}
 
-```{r echo=FALSE, fig.height=4.5, fig.width=5}
+```{r, cache=TRUE, fig.height=4.5, fig.width=5}
 #surface et BALLE DE BREAK sauvé 
 D%>%mutate(bpsaved=ifelse(Nadal_win==1,w_bpSaved,l_bpSaved))->D
 D%>%group_by(Surface)%>%summarise(Nb_bpsaved=sum(bpsaved,na.rm = TRUE))%>%mutate(freq=Nb_bpsaved/sum(Nb_bpsaved),lab=paste0(round(freq*100,0),"%"))->bpsaveds
@@ -181,62 +186,40 @@ ggplot(bpsaveds)+geom_bar(aes(x=Surface,y=freq,fill=Surface),stat='identity')+xl
 
 ### Part de vitoires de `r  J_Prenom` `r  J_Nom` pour la saison `r  annee` par rapport au top 10 (en %) {data-height=533}
 
-```{r echo=FALSE, fig.height=5, fig.width=6}
+```{r, cache=TRUE, fig.height=5, fig.width=6}
 #Nombre de match gagné des top10 par surface 
 atp_matches_2013 %>%
   filter((winner_id != id_Nadal & winner_rank < 11) | (loser_id != id_Nadal & loser_rank < 11)) %>%
   group_by(Surface) %>%
   summarize(nombre_victoire = n()) -> nbr_game_top10
 
-#calculer le taux des gains pour les top10 
+#Création de la variable "nombre de match joué" pour calculer le taux des gains pour les top10 
 atp_matches_2013 %>%
   filter(winner_id != id_Nadal & winner_rank < 11) %>%
   group_by(Surface) %>%
   summarize(nombre_victoire = n()) %>%
-  mutate(nb_match =nbr_game_top10$nombre_victoire, taux_top10 = round(nombre_victoire/nb_match,2)) %>%
+  mutate(nb_match =nbr_game_top10$nombre_victoire, taux = round(nombre_victoire/nb_match,2)) %>%
   as.data.frame() -> nbr_game_top10_win 
 
-taux_top10 <- nbr_game_top10_win[,4]
+#Multiplier le taux des gains des top10 par le nombre de match joué par nadal 
+#afin de comparer nadal et les top10
+nbr_game_top10_win <- nbr_game_top10_win %>%
+  mutate(nb_gameNadal = c(41,1,41),victoire_top10=nb_gameNadal*taux)
 
-#calculer le taux des gains pour Rafael Nadal
-
+#Nombre de match gagné de Rafael Nadal par surface
 atp_Nadal %>% 
   filter(winner_id == id_Nadal) %>%
   group_by(Surface) %>%
-  summarize(Nombre_victoire =n()) -> Nbr_victoire_Nadal
-
-n = nrow(Nbr_victoire_Nadal)
-if (n < 3){
-  for(i in 1:3-n){
-  Nbr_victoire_Nadal <- rbind(Nbr_victoire_Nadal,c("Herbe",0))
-  break
-  }
-}
-
-Nbr_victoire_Nadal$Nombre_victoire = as.numeric(Nbr_victoire_Nadal$Nombre_victoire)
-
-atp_matches_2013 %>% 
-  filter(winner_id == id_Nadal | loser_id == id_Nadal)%>%
-  group_by(Surface) %>% 
-  summarize(Nbr_match = n())->Nombre_match_Nadal
-
-Nombre_match_Nadal %>%
-  inner_join(Nbr_victoire_Nadal,by="Surface") -> Res_Nadal
-
-Res_Nadal %>%
-  mutate(taux_nadal = round(Nombre_victoire/Nbr_match,2)) -> Res_NadalVsTop10
-
-taux_Nadal <- Res_NadalVsTop10$taux_nadal
+  summarize(Nombre_match =n()) -> Kiviat_Nb
 
 #Mise en forme du diagramme 
-
-
+Kiviat_Nb <- rbind(Kiviat_Nb,c("Herbe",0))
 min <- rep(0,each=3)
-max <- rep(1,each=3)
-tible <- t(cbind(max,min,taux_Nadal,taux_top10))
-tible <- as.data.frame(tible)
-colnames(tible) <- c("Victoire sur \n terre dure","Victoire sur terre \n gazon","Victoire \n sur battue")
-
+max <- c(41,41,1)
+tible <- t(cbind(max,min,Kiviat_Nb))[-3,]
+tible <- as.data.frame(tible,)
+tible <- rbind(tible, Nombre_match_top10_win = nbr_game_top10_win[c(1,3,2),6])
+colnames(tible) <- c("Victoire sur \n terre battue","Victoire sur terre \n dure","Victoire \n sur gazon")
 for(i in 1:3){
   tible[,i] <- as.numeric(tible[,i])
 }
@@ -255,14 +238,15 @@ radarchart(tible,axistype=1 ,
 )
 
 
-legend(-2,1.25, legend=c("Top 10",J_Nom),
+legend(-2,1.25, legend=c(J_Nom, "Top 10"),
        col=c(rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9)),lwd = 3 ,lty=1:2, cex=1,bty="n")
 
 ```
 
+
 ### Tournois disputés et résultats obtenus {data-height=533}
 
-```{r echo=FALSE, fig.height=4, fig.width=5.5}
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=4, fig.width=5.5}
 atp_Nadal %>%
   mutate(result =case_when(winner_id == id_Nadal ~ "Victoire",
                            winner_id != id_Nadal ~ 'Défaite')) %>%
@@ -278,7 +262,7 @@ tour_Nadal%>%
   summarise(N = n())%>%
   ggplot(mapping = aes(x=tourney_result, fill = tourney_result, y = N))+
   geom_col()+
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_manual(values = c("chartreuse4", "chocolate",  "#A7B800", "#E8B800"))+
   theme_minimal()+
   geom_text(mapping = aes(y = N, label = N)) +
   labs(y = "Nombre de tournoi", x = 'Résultats') +
@@ -293,7 +277,7 @@ Column {data-width=450}
 
 ### Adversaires rencontrés et resultats des confrontations
 
-```{r echo=FALSE, fig.height=12, fig.width=7}
+```{r message=FALSE, warning=FALSE, cache=TRUE, fig.height=13, fig.width=8}
 atp_Nadal %>%
   mutate(resultat = ifelse(winner_id==id_Nadal, 'victoire', 'défaite'),
          Adversaire = ifelse(winner_id==id_Nadal, loser_name, winner_name)) %>%
@@ -318,7 +302,7 @@ Informations
 Column {data-width=50, data-height=100}
 -----------------------------------------
 
-```{r echo=FALSE, fig.height=6, fig.width=4}
+```{r, cache=TRUE, fig.height=6, fig.width=4}
 # Photo du joueur --------------------------------------------------------
 a<-stringr::str_replace(J_Prenom," ", "_") 
 b<-stringr::str_replace(J_Nom," ", "_")
@@ -338,9 +322,9 @@ image_ggplot(img)
 
 Column {data-width=17, data-height=100}
 -----------------------------------------
-```{r echo=FALSE}
+```{r}
 # Information sur le joueur
-col<-c("id","J_Prenom1","J_Nom1","hand","Bth","Nat")
+col<-c("id","J_Prenom","J_Nom","hand","Bth","Nat")
 colnames(players)<-col
 
 players %>%
@@ -350,57 +334,60 @@ players %>%
                         hand=="U"~"Inconnu")) -> a
 
 
-
 players%>%
-  filter(J_Prenom1==J_Prenom & J_Nom1==J_Nom)%>%
+  filter(J_Prenom=="Rafael" & J_Nom=="Nadal")%>%
   select(id)%>%
   as.numeric()->id_Nadal
 
 a <- a[which(a$id==id_Nadal),]
-nat <- a$Nat
 
-Nom <- a$J_Nom1
-Prenom <- a$J_Prenom1
+b <- fread("https://sql.sh/ressources/sql-pays/sql-pays.csv",encoding = 'UTF-8')
+b <- b[which(b$V4==a$Nat),5]
+
+Nom <- a$J_Nom
+Prenom <- a$J_Prenom
 Main <- a$hand
-
+Nationalite <- b$V5
 
 ```
 
 
 ### Nom du joueur {data-width=10, data-height=10}
-```{r echo=FALSE} 
+```{r, cache=TRUE} 
 nom = cat(Nom," ", Prenom)
 valueBox(nom,icon = "fa-table-tennis",color = "green")
 ```
 
 ### Nationalité {data-width=10, data-height=10}
-```{r echo=FALSE}
-valueBox(nat,icon = "fa-table-tennis",color = "green")
+```{r, cache=TRUE}
+valueBox(Nationalite,icon = "fa-table-tennis",color = "green")
 ```
 
 ### Age  en  `r annee` {data-width=10, data-height=10}
-```{r echo=FALSE}
+```{r, cache=TRUE}
 age = cat(J_age,"ans")
 valueBox(age,icon = "fa-table-tennis",color = "green")
 ```
 
 
 ### Main dominante {data-width=10, data-height=10}
-```{r echo=FALSE}
+```{r, cache=TRUE}
 valueBox(Main ,icon = "fa-table-tennis",color = "green")
 ```
 
-### Classement  actuel {data-width=10, data-height=10}
-```{r echo=FALSE}
-# classement mondial actuel
+### Classement  en  `r annee` {data-width=10, data-height=10}
+```{r, cache=TRUE}
+# classement mondial
 atp_classement%>%
+  mutate(ranking_date=ymd(ranking_date))%>%
+  mutate(date = year(ranking_date)) %>%
   arrange(desc(ranking_date)) %>%
-  filter(player==id_Nadal)%>%
+  filter(player==id_Nadal, date == as.integer(annee))%>%
   select(rank)%>%
   slice(1L)%>%
   as.numeric()->Class_act
 
-rang = cat("N°",Class_act, "mondial")
+rang = cat("n°",Class_act, "mondial")
 valueBox(rang ,icon = "fa-table-tennis",color = "green")
 ```
 
@@ -409,11 +396,11 @@ Column {data-width=60, data-height=100}
 ----------------------------------------
 
 ### Réalisateurs du projet 
-```{r echo=FALSE}
+```{r}
 realisateurs = rbind(c("CARRE", "Nolan", "SEP-MATH"),
                      c("GUEYE","Lamine", "SEP-MATH"),
                      c("HORNOY","Antoine", "SEP-ECO"),
-                     c("OUBIDA", "Anas", "SEP-ECO"),
+                     c("OUBIDAS", "Anas", "SEP-ECO"),
                      c("SERBOUT", "Nasr", "SEP-MATH"),
                      c("TCHAKAH", "Koffi", "SEP-ECO"))
 realisateurs =  as.data.frame(realisateurs)

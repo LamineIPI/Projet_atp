@@ -58,7 +58,7 @@ atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
-atp_cluster_test <- atp_cluster_test[,-1]
+#atp_cluster_test <- atp_cluster_test[,-1]
 
 summary(atp_cluster_test)
 str(atp_cluster_test)
@@ -213,72 +213,107 @@ tx_err_rf # DÃ©sastreux...
 
 ## Recherche de caractéristiques
 library(MASS)
-modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_remontada)
-modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_remontada)
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_cluster_test)
+summary(modele.complet) #Beaucoup de variables ne sont pas significatives et cele peut etre du par des
+#problème de multicolinéarité etre les variables explicatives. 
 
-select.modele.bic.back <- step(object = modele.complet, 
+library(corrplot) 
+mcor = cor(atp_cluster_test[,-20])
+corrplot(mcor, type="upper", order="hclust", tl.col="black", tl.srt=45) 
+#D'après la matrice de corrélation, on remarque que plusieurs variables sont fortement corrélées. 
+#Ainsi, pour palier à ce problème nous allons une sélection de variables selon le critère d'information de AIC.
+
+# Faisons une selection des variables qui expliquent au mieux la variable cible (remontada) solon le 
+# critère d'AIC.
+select.modele <- step(object = modele.complet, 
                                scope = list(lower = modele.trivial, upper = modele.complet), 
-                               direction = "backward", k = log(n))
+                               direction = "backward")
+
+select.modele
+modele.optimal = formula(select.modele$model) #le modèle optimal obtenu
+
+#### Test de validité du modèle global : H_0 : w_2 = w_3 = (0,0,0) ####
+modele.RL <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+res <- summary(modele.RL)
+res
+
+#### Tester (avec rapport de vraismeblance) la validité du modéle complet ####
+Sn = modele.RL$null.deviance - modele.RL$deviance #la statistique du rapport de vraisemblance
+print(Sn)
+ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrés de liberté de la loi limite de Sn, sous H_0
+print(ddl)
+pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) où Z suit une loi du chi^2(ddl)
+print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "trés" significatif
 
 
-################################# Echantillonnage des donn?es ########################################
+# Estimation de l'erreur de classification, par K-fold cross-validation 
+# On peut utiliser le fonction cv.glm du package boot
+library(boot)
+modele.glm <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est approprié au cas d'une variable réponse binaire
+# Par exemple K = 10, on obtient
+K <- 10
+cv.err <- cv.glm(data = atp_cluster_test, glmfit = modele.glm, cost = cout, K = K)
+cv.err$delta[1] # un taux d'erreur de 0.42 : pas trop fameux ce taux d'erreur!
 
-####Extraire que les matchs non remontada 
+################################# Echantillonnage des donnees ########################################
+
+####Extraire que les matchs 5 sets non remontada 
 atp_remontada_all %>%
   filter(remontada == 0) %>% 
-  select(-c(1,13)) -> atp_non_remontada
+  select(-c(1,21)) -> atp_non_remontada
 
-####Standardiser nos donn?es + calcule de la distance euclidienne 
+####Standardiser nos donnees + calcule de la distance euclidienne 
 atp_non_remontada.scaled <- scale(atp_non_remontada, center = TRUE, scale = TRUE)
 atp_non_remontada.dist <- dist(atp_non_remontada.scaled, "euclidean")
 
-####D?tection des anomalies avec DBSCAN 
-#D?tecter la valeur aberrante 
-db <- fpc::dbscan(atp_non_remontada.scaled, eps =6.5, MinPts = 5)
+####Detection des anomalies avec DBSCAN 
+#Detecter les valeurs aberrantes 
+db <- fpc::dbscan(atp_non_remontada.scaled, eps =8, MinPts = 5)
 fviz_cluster(db, atp_non_remontada.scaled, geom = "point")
-#Extraire la valeur aberrante
+#Extraire les valeurs aberrantes
 pt_aberrant = which(db$isseed == FALSE)
 atp_non_remontada.scaled_anomalie=atp_non_remontada.scaled[-pt_aberrant,]
-db <- fpc::dbscan(atp_non_remontada.scaled_anomalie, eps =6.5, MinPts = 5)
+db <- fpc::dbscan(atp_non_remontada.scaled_anomalie, eps =8, MinPts = 5)
+#Visualisation des donnees sans valeurs aberrantes 
 fviz_cluster(db, atp_non_remontada.scaled_anomalie, geom = "point")
 
-##### Determination du K optimal (sans la valeur aberrante)
+##### Determination du K optimal (sans les valeurs aberrantes)
 
-# Elbow method nous donne K = 4
+# Elbow method nous donne K = 2
 fviz_nbclust(atp_non_remontada.scaled_anomalie, kmeans, method = "wss") +
-  geom_vline(xintercept = 4, linetype = 2)+
+  geom_vline(xintercept = 2, linetype = 2)+
   labs(subtitle = "Elbow method")
 
-#Silhouette method nous donne K = 2 mais aussi avec un K=4 le coef de 
-#silhouette ne va pas bcp baisser par rapport ? la repartition de 2 clusters 
-
+#Silhouette method nous donne K = 2 
 fviz_nbclust(atp_non_remontada.scaled_anomalie, kmeans, method = "silhouette")+
   labs(subtitle = "Silhouette method")
 
-# 8 m?thodes proposent une r?partition de 4 clusters contre 7 m?thodes qui recommandent
-#une r?partition de 2 clusters 
+#10 methodes proposent une repartition de 2 clusters contre 8 methodes qui recommandent
+#une repartition de 3 clusters 
 nbClust <- NbClust(atp_non_remontada.scaled_anomalie, distance = "euclidean", min.nc = 2,
                    max.nc = 10, method = "kmeans")
 fviz_nbclust(nbClust)
 
-####### Donc on choisit une r?partition de 4 clusters ########
-#D'apr?s la visualisation du dendogramme, le CAH confirme le choix de 4 clusters
+####### On choisit une repartition de 2 clusters ########
+#D'apres la visualisation du dendogramme, le CAH confirme le choix de 2 clusters
 par(mfrow =c(1,1))
 atp_non_remontada.dist_anomalie <- dist(atp_non_remontada.scaled_anomalie, "euclidean")
 hca <- hclust(atp_non_remontada.dist_anomalie, method = "ward.D2")
-plot(hca,main = "Dendrogramme ")
-rect.hclust(hca, k=4)
+plot(hca,main = "Dendrogramme ",xlab = "Matchs des 5 sets sans remontada")
+rect.hclust(hca, k=2)
 
 ####Affichage des clusters par l'algorithme du K-Medoids
-# On prend K = 4
-kmed <- pam(atp_non_remontada.scaled_anomalie, 4, metric = "euclidean", stand = TRUE)
+# On prend K = 2
+kmed <- pam(atp_non_remontada.scaled_anomalie, 2, metric = "euclidean", stand = TRUE)
 # Visualisation
 fviz_cluster(kmed,data = atp_non_remontada.scaled_anomalie,
-             palette = c("#2E9FDF", "#00AFBB","#AD4F09","#BBACAC"),   
+             palette = c("#2E9FDF", "#00AFBB"),   
              geom = "point",
              ellipse.type = "convex",
              ggtheme = theme_bw())
-#enlever la valeur aberrante de notre base de d?part
+#enlever les valeurs aberrantes de notre base de depart
 atp_non_remontada <- atp_non_remontada[-pt_aberrant,]
 #Ajouter la variable cluster, Nombre d'individus par cluster et 
 #la proportion d'individus dans chaque cluster 
@@ -288,43 +323,28 @@ atp_non_remontada %>%
   summarize(Nb_ind = n()) %>%
   mutate(Tau_ind =Nb_ind /sum(Nb_ind)) -> taux_indiv_clus
 
-#Cr?ation d'une base (de non remontada) de 421 observations dont lequel chaque 
-#cluster va ?tre repr?senter avec la m?me proportion que la base 
+#Creation d'une base (de non remontada) de 421 observations dont lequel chaque 
+#cluster va etre representer avec la meme proportion que la base 
 #initiale(on a pris que les 5 sets) 
 
 atp_non_remontada %>%
   filter(cluster == 1) %>%
-  mutate(remontada= rep(0,each=770)) -> atp_non_remontada.1
+  mutate(remontada= rep(0,each=1002)) -> atp_non_remontada.1
 atp_non_remontada.1 <- atp_non_remontada.1[sample(1:nrow(atp_non_remontada.1), 
-                                                  (421*taux_indiv_clus$Tau_ind[1]+1), replace=FALSE), -12]
+                                                  (421*taux_indiv_clus$Tau_ind[1]+1), replace=FALSE), -20]
 
 atp_non_remontada %>%
   filter(cluster == 2) %>%
-  mutate(remontada= rep(0,each=429)) -> atp_non_remontada.2
+  mutate(remontada= rep(0,each=1177)) -> atp_non_remontada.2
 atp_non_remontada.2 <- atp_non_remontada.2[sample(1:nrow(atp_non_remontada.2), 
-                                                  (421*taux_indiv_clus$Tau_ind[2]+1), replace=FALSE),-12 ]
-
-atp_non_remontada %>%
-  filter(cluster == 3) %>%
-  mutate(remontada= rep(0,each=568))-> atp_non_remontada.3
-atp_non_remontada.3 <- atp_non_remontada.3[sample(1:nrow(atp_non_remontada.3), 
-                                                  (421*taux_indiv_clus$Tau_ind[3]), replace=FALSE),-12 ]
-
-atp_non_remontada %>%
-  filter(cluster == 4) %>%
-  mutate(remontada= rep(0,each=414))-> atp_non_remontada.4
-atp_non_remontada.4 <- atp_non_remontada.4[sample(1:nrow(atp_non_remontada.4), 
-                                                  (421*taux_indiv_clus$Tau_ind[4]+1), replace=FALSE),-12 ]
+                                                  (421*taux_indiv_clus$Tau_ind[2]), replace=FALSE),-20]
 
 #Extraire les remontadas
 atp_remontada_all %>%
   filter(remontada == 1) %>%
   select(-c(1))-> atp_remontada
 #Fusion de remontada et non remontada
-Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,
-                         atp_non_remontada.2,atp_non_remontada.3,atp_non_remontada.4)
-
-
+Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,atp_non_remontada.2)
 
 ####################################" BOOSTING and Bagging ###################"
 
