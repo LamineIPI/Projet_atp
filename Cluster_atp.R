@@ -48,7 +48,6 @@ atp_Cluster %>%
 
 #que les 5 sets et selection des variables pertinentes
 atp_remontada_all  <- filter(atp_remontada_all, str_count(atp_remontada_all$score,"-") == 5)
-atp_remontada_all  <- atp_remontada_all[,-c(1:4)]
 atp_remontada_all  <- atp_remontada_all[,c(4:24)]
 
 #selection de la base non remontada
