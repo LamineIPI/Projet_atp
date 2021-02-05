@@ -1,0 +1,229 @@
+---
+documentclass: "compterendu"
+lang: true
+babel-lang: "french"
+geometry:
+  - left=1.5cm
+  - right=1.5cm
+  - top=1.5cm
+  - bottom=2cm
+title: "Analyse des facteurs d'une remontada (ATP2)"
+author: 
+  - Nolan Carré
+  - Lamine Gueye
+  - Anas Oubida
+  - Nasr Serbout
+  - Tchakah Koffi Kaffui
+email:
+  - nolan.carre@etudiant.univ-reims.fr
+  - lamine.gueye@etudiant.univ-reims.fr
+  - anas.oubida@etudiant.univ-reims.fr
+  - nasr.serbout@etudiant.univ-reims.fr
+  - koffi-kafui.tchakah@etudiant.univ-reims.fr
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "Ce rapport présente l'analyse des facteurs d'une remontada. Quels sont les caractéristiques qui définissent la victoire d'un joueur alors qu'il a perdu deux premiers sets"
+anac: "2020-2021"
+diplome: "Master Statistique pour l'Evaluation et la Prévision"
+module: "SEP0922"
+enseig: "Philippe Regnault & Frédéric Blanchard"
+evaluation: "Compte-rendu d'analyse"
+output: 
+  bookdown::pdf_book:
+    template: template.tex
+    fig_caption: yes
+    keep_tex: yes
+    toc: yes
+bibliography: biblio_cr-urca.bib
+biblio-style: plain
+link-citations: yes
+---
+
+# Introduction 
+
+Notre brigade de projet ATP2 composée de Nolan, Lamine, Anas, Nasr et Koffi-Kafui. Le but de notre étude est de déterminer à partir des bases de données atp les matchs où l'on peut observer une remontée d'un joueur. Une remontada est un match où un joueur gagne la partie alors qu'il était mené de deux sets. Nous avons donc choisi d'étudier uniquement les matchs qui se sont déroulés en 5 sets. 
+Nous avons décider de réaliser cette mission de plusieurs façons. Dans un premier temps, nous avons travaillé sur une base de données constitué des 421 matchs correspondant à une remontée et de 421 matchs pris aléatoirement dans les matchs normaux. Dans un second temps nous avons choisi de [...]
+
+
+
+# Sélection aléatoire
+
+Pour la sélection de notre base de données, nous avons donc décidé de prendre 842 observations avec 421 matchs où l'on voit une remontada et 421 matchs sans remontada.
+
+## Etude de la Random Forest
+
+L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre, La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
+
+```{r echo=FALSE, warning=FALSE}
+
+
+#### Random Forest ####
+
+
+randomForest(remontada ~ .,
+             data = atp_train, 
+             mtry = 4,
+             ntree = 500,
+             na.action = na.roughfix) -> atp_rf
+
+# mean of squared residuals  = 0.0388 not that bad
+predict(atp_rf, newdata = atp_test) -> yhat
+# Confusion matrix for bagging
+table(atp_test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+
+```
+
+On observe également l'importance des variables danns notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+
+```{r echo=FALSE, warning=FALSE}
+
+atp_rf$importance
+
+```
+
+## Regression logistique
+
+Beaucoup de variables ne sont pas significatives et cele peut etre du par des problèmes de multicolinéarité etre les variables explicatives (voir annexe 1). On a un problème de multicolinéarité etre les variables explicatives. 
+
+```{r warning=FALSE, include=FALSE}
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_cluster_test)
+mcor = cor(atp_cluster_test[,-20])
+corrplot(mcor, type="upper", order="hclust", tl.col="black", tl.srt=45) 
+
+select.modele <- step(object = modele.complet, 
+                      scope = list(lower = modele.trivial, upper = modele.complet), 
+                      direction = "backward")
+
+modele.optimal = formula(select.modele$model) 
+
+```
+
+Le modèle optimal retenu est donc celui-ci : 
+
+```{r echo=FALSE, warning=FALSE}
+
+modele.optimal
+
+```
+
+
+
+```{r warning=FALSE, include=FALSE}
+
+modele.RL <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+res <- summary(modele.RL)
+res
+
+#### Tester (avec rapport de vraismeblance) la validité du modéle complet 
+Sn = modele.RL$null.deviance - modele.RL$deviance #la statistique du rapport de vraisemblance
+print(Sn)
+ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrés de liberté de la loi limite de Sn, sous H_0
+print(ddl)
+pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) où Z suit une loi du chi^2(ddl)
+print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "trés" significatif
+
+
+```
+
+La statistique du rapport de vraisemblance : `r Sn`
+
+Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+
+La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "trés" significatif
+
+```{r warning=FALSE, include=FALSE}
+
+modele.glm <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est approprié au cas d'une variable réponse binaire
+# Par exemple K = 10, on obtient
+K <- 10
+cv.err <- cv.glm(data = atp_cluster_test, glmfit = modele.glm, cost = cout, K = K)
+cv.err$delta[1]
+
+```
+
+Le taux d'erreur de notre modèle est de : `r cv.err$delta[1]`
+
+# Sélection par échantillonnage des données 
+
+
+## Etude de la Random Forest
+
+L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre, La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
+
+```{r RF echant, echo=FALSE, warning=FALSE}
+
+#### Random Forest grâce à l'échantillonage ####
+
+randomForest(remontada ~ .,
+             data = atp_echant_train, 
+             mtry = 4,
+             ntree = 500,
+             na.action = na.roughfix) -> atp_echant_rf
+
+# mean of squared residuals  = 0.0388 not that bad
+predict(atp_echant_rf, newdata = atp_echant_test) -> yhati
+# Confusion matrix for bagging
+table(atp_echant_test$remontada, yhati) -> conf_echant_mat
+tx_err_echant_RF <-(conf_echant_mat[1,2] + conf_echant_mat[2,1]) / sum(conf_echant_mat)
+tx_err_echant_RF
+
+```
+
+On observe également l'importance des variables danns notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+
+```{r echo=FALSE, warning=FALSE}
+
+atp_echant_rf$importance
+
+```
+
+
+
+```{r dotplotex, fig.cap = "(ref:capdotplotex)"}
+
+```
+ 
+
+
+```{r tableex, message = FALSE}
+
+```
+
+
+
+```{theorem, theoex, name="Pythagorean theorem", echo=TRUE}
+
+```
+
+
+
+# (APPENDIX) Annexes {-}
+
+# Annexes
+
+## Annexe 1 : Recherche de caractéristiques
+
+```{r echo=FALSE, warning=FALSE}
+
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_cluster_test)
+summary(modele.complet)
+
+```
+
+## Annexe 2 : Choix du modèle optimal
+
+```{r echo=FALSE, warning=FALSE}
+
+select.modele <- step(object = modele.complet, 
+                      scope = list(lower = modele.trivial, upper = modele.complet), 
+                      direction = "backward")
+
+select.modele
+
+```
+# Bibliographie
