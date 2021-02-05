@@ -324,3 +324,115 @@ atp_remontada_all %>%
 Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,
                          atp_non_remontada.2,atp_non_remontada.3,atp_non_remontada.4)
 
+
+
+####################################" BOOSTING and Bagging ###################"
+
+
+######Bagging 
+library(randomForest)
+atp_cluster_test$remontada=as.factor(atp_cluster_test$remontada)
+#train test split
+set.seed(123)
+index=sample(1:nrow(atp_cluster_test),0.7*nrow(atp_cluster_test),replace = FALSE)
+train=atp_cluster_test[index,]
+test=atp_cluster_test[-index,]
+dim(train); dim(test)
+
+#verification de l'equilibre au niveau de la variable cible 
+train%>%group_by(remontada)%>%summarise(N=n())
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
+             mtry = 19,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+## Lecture de quelques résultats
+# Matrice de confusion sur données OOB
+atp_bagging$confusion
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+
+
+set.seed(123)
+index=sample(1:nrow(atp_cluster_test),0.7*nrow(atp_cluster_test),replace = FALSE)
+train=atp_cluster_test[index,c("minutes","w_svpt","w_ace","l_svpt","w_1stWon","w_2ndWon","l_ace","l_1stWon","l_2ndWon","remontada")]
+test=atp_cluster_test[-index,c("minutes","w_svpt","w_ace","l_svpt","w_1stWon","w_2ndWon","l_ace","l_1stWon","l_2ndWon","remontada")]
+dim(train); dim(test)
+
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
+             mtry = 9,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+## Lecture de quelques résultats
+# Matrice de confusion sur données OOB
+atp_bagging$confusion
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+
+#################"boosting #######################
+
+library('gbm')
+set.seed(123)
+# Conversion adequation en variable binaire
+
+atp_cluster_test$remontada=as.numeric(atp_cluster_test$remontada)-1
+train=atp_cluster_test[index,]
+test=atp_cluster_test[-index,]
+# Boosting classification tree with gbm
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = train,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.01) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost
+
+
+################adaboost
+
+X_train=as.matrix(train[,-20])
+y_train=(as.matrix(train[,20])*2) -1
+X_test=as.matrix(test[,-20])
+y_test=(as.matrix(test[,20])*2) -1
+
+adaboost(X_train, y_train, tree_depth = 1, n_rounds = 500)->atp_adaboost
+
+predict(atp_adaboost,X_test)->yhat
+
+
+table(y_test, yhat) -> conf_mat
+tx_err_ada_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_ada_boost
