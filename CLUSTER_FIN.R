@@ -1,6 +1,6 @@
 ####Clustering sur fichier atp_matches####
 ### PB : Identification des facteurs permettant d'expliquer les retournements 
-###de situation (gagner un match en 5 sets en Ètant menÈ 2 sets ‡ 0).
+###de situation (gagner un match en 5 sets en √©tant men√© 2 sets √† 0).
 ###Ne prendre que les 5 sets (minimum) (donc minimum 19 caracteres)  + ( ceux de la forme ...-6, .. -6 , 6-... , 6-... , 6-...)
 ###DISTANCE DE GOVER AVEC FONCTION DAISY POUR PROBLEME A VARIABLE MIXTES
 
@@ -31,13 +31,13 @@ lst_names <- paste('atp', str_extract(string = lst_data, pattern = "[[:digit:]]{
 lst_tib <- map(.x = lst_data, function (x) read_csv(paste("data/", x, sep = "")))
 names(lst_tib) <- lst_names
 
-################### DÈfinition des bases de donnÈes #####################
+################### D√©finition des bases de donn√©es #####################
 
 atp_Cluster <- reduce(.x = lst_tib, .f = bind_rows)
 
 atp_Cluster %>%
   mutate(surface = factor(surface, levels = names(sort(table(surface))), ordered = TRUE)) %>%
-  #Toilettage en prÈvision de l'inclusion dans un rapport ou un graphique
+  #Toilettage en pr√©vision de l'inclusion dans un rapport ou un graphique
   rename(Surface = surface) %>%
   mutate(Surface = case_when(Surface == "Clay" ~ "Terre battue",
                              Surface == "Grass" ~ "Herbe",
@@ -45,19 +45,19 @@ atp_Cluster %>%
 
 
 
-#on sÈlectionne juste les colonnes qui nous intÈresse 
+#on s√©lectionne juste les colonnes qui nous int√©resse 
 
 atp_Cluster <- atp_Cluster[,c(15,16,23,24,27:45)]
 atp_Cluster <- drop_na(atp_Cluster)
 
-# On crÈÈ atp_remontada_all qui est une base de donnÈes avec la variable en plus donnant la remontada ou non 0 ou 1
+# On cr√©√© atp_remontada_all qui est une base de donn√©es avec la variable en plus donnant la remontada ou non 0 ou 1
 atp_Cluster %>% 
   mutate(remontada = ifelse(str_count(score,"-") == 5,
                             ifelse(str_sub(score,1,1) <= str_sub(score,3,3),
                                    ifelse(str_sub(score,5,5) <= str_sub(score,7,7),1,0),0),0)
   ) -> atp_remontada_all
 
-#on rÈcupËre seulement les remontadas
+#on r√©cup√®re seulement les remontadas
 atp_remontada_seul <- filter(atp_Cluster, str_count(atp_Cluster$score,"-") == 5)
 atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,1,1) <= str_sub(atp_remontada_seul$score,3,3))
 atp_remontada_seul <- filter(atp_remontada_seul, str_sub(atp_remontada_seul$score,5,5) <= str_sub(atp_remontada_seul$score,7,7))
@@ -172,7 +172,7 @@ atp_remontada <- atp_remontada[,-1]
 #Fusion de remontada et non remontada
 Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,atp_non_remontada.2)
 
-#### CrÈation de la base d'entrainement et de test pour la sÈlection alÈatoire ####
+#### Cr√©ation de la base d'entrainement et de test pour la s√©lection al√©atoire ####
 set.seed(234)
 N <- nrow(atp_cluster_test)
 sel <- sample(1:N, size = N*0.2, replace = FALSE)
@@ -180,13 +180,13 @@ atp_cluster_test <- atp_cluster_test[,-c(1:3)]
 atp_train <- atp_cluster_test[setdiff(1:N, sel),]
 atp_test <- atp_cluster_test[sel,]
 
-#### CrÈation de la base d'entrainement et de test pour la sÈlection par Èchantillonage ####
+#### Cr√©ation de la base d'entrainement et de test pour la s√©lection par √©chantillonage ####
 N <- nrow(Echantillon_atp)
 sel <- sample(1:N, size = N*0.2, replace = FALSE)
 atp_echant_train <- Echantillon_atp[setdiff(1:N, sel),]
 atp_echant_test <- Echantillon_atp[sel,]
 
-######################################## CrÈation du Rmarkdown ####################################
+######################################## Cr√©ation du Rmarkdown ####################################
 
 render("Remontada_rapport.rmd")
 
@@ -217,7 +217,7 @@ atp_rf$importance
 
 
 
-#### Random Forest gr‚ce ‡ l'Èchantillonage ####
+#### Random Forest gr√¢ce √† l'√©chantillonage ####
 
 set.seed(123)
 randomForest(remontada ~ .,
@@ -239,49 +239,49 @@ atp_echant_rf$importance
 
 
 
-######################################### RegrÈssion logistique ###############################
+######################################### Regr√©ssion logistique ###############################
 
-## Recherche de caractÈristiques
+## Recherche de caract√©ristiques
 
 modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
 modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_cluster_test)
 summary(modele.complet) #Beaucoup de variables ne sont pas significatives et cele peut etre du par des
-#problËme de multicolinÈaritÈ etre les variables explicatives. 
+#probl√®me de multicolin√©arit√© entre les variables explicatives. Seule la variable minute est significative 
 
 
 mcor = cor(atp_cluster_test[,-20])
 corrplot(mcor, type="upper", order="hclust", tl.col="black", tl.srt=45) 
-#D'aprËs la matrice de corrÈlation, on remarque que plusieurs variables sont fortement corrÈlÈes. 
-#Ainsi, pour palier ‡ ce problËme nous allons une sÈlection de variables selon le critËre d'information de AIC.
+#D'apr√®s la matrice de corr√©lation, on remarque que plusieurs variables sont fortement corr√©l√©es. 
+#Ainsi, pour palier √† ce probl√®me nous allons une s√©lection de variables selon le crit√®re d'information de AIC.
 
 # Faisons une selection des variables qui expliquent au mieux la variable cible (remontada) solon le 
-# critËre d'AIC.
+# crit√®re d'AIC.
 select.modele <- step(object = modele.complet, 
                       scope = list(lower = modele.trivial, upper = modele.complet), 
                       direction = "backward")
 
 select.modele
-modele.optimal = formula(select.modele$model) #le modËle optimal obtenu
+modele.optimal = formula(select.modele$model) #le mod√®le optimal obtenu
 
-#### Test de validitÈ du modËle global : H_0 : w_2 = w_3 = (0,0,0)
+#### Test de validit√© du mod√®le global : H_0 : w_2 = w_3 = (0,0,0)
 modele.RL <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
 res <- summary(modele.RL)
 res
 
-#### Tester (avec rapport de vraismeblance) la validitÈ du modÈle complet 
+#### Tester (avec rapport de vraismeblance) la validit√© du mod√©le complet 
 Sn = modele.RL$null.deviance - modele.RL$deviance #la statistique du rapport de vraisemblance
 print(Sn)
-ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrÈs de libertÈ de la loi limite de Sn, sous H_0
+ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degr√©s de libert√© de la loi limite de Sn, sous H_0
 print(ddl)
-pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) o˘ Z suit une loi du chi^2(ddl)
-print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modËle est "trÈs" significatif
+pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) o√π Z suit une loi du chi^2(ddl)
+print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le mod√®le est "tr√©s" significatif
 
 
 # Estimation de l'erreur de classification, par K-fold cross-validation 
 # On peut utiliser le fonction cv.glm du package boot
 
 modele.glm <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
-cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est appropriÈ au cas d'une variable rÈponse binaire
+cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est appropri√© au cas d'une variable r√©ponse binaire
 # Par exemple K = 10, on obtient
 K <- 10
 cv.err <- cv.glm(data = atp_cluster_test, glmfit = modele.glm, cost = cout, K = K)
