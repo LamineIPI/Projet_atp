@@ -258,64 +258,63 @@ K <- 10
 cv.err <- cv.glm(data = atp_cluster_test, glmfit = modele.glm, cost = cout, K = K)
 cv.err$delta[1] # un taux d'erreur de 0.42 : pas trop fameux ce taux d'erreur!
 
-################################# Echantillonnage des donn?es ########################################
+################################# Echantillonnage des donnees ########################################
 
-####Extraire que les matchs non remontada 
+####Extraire que les matchs 5 sets non remontada 
 atp_remontada_all %>%
   filter(remontada == 0) %>% 
-  select(-c(1,13)) -> atp_non_remontada
+  select(-c(1,21)) -> atp_non_remontada
 
-####Standardiser nos donn?es + calcule de la distance euclidienne 
+####Standardiser nos donnees + calcule de la distance euclidienne 
 atp_non_remontada.scaled <- scale(atp_non_remontada, center = TRUE, scale = TRUE)
 atp_non_remontada.dist <- dist(atp_non_remontada.scaled, "euclidean")
 
-####D?tection des anomalies avec DBSCAN 
-#D?tecter la valeur aberrante 
-db <- fpc::dbscan(atp_non_remontada.scaled, eps =6.5, MinPts = 5)
+####Detection des anomalies avec DBSCAN 
+#Detecter les valeurs aberrantes 
+db <- fpc::dbscan(atp_non_remontada.scaled, eps =8, MinPts = 5)
 fviz_cluster(db, atp_non_remontada.scaled, geom = "point")
-#Extraire la valeur aberrante
+#Extraire les valeurs aberrantes
 pt_aberrant = which(db$isseed == FALSE)
 atp_non_remontada.scaled_anomalie=atp_non_remontada.scaled[-pt_aberrant,]
-db <- fpc::dbscan(atp_non_remontada.scaled_anomalie, eps =6.5, MinPts = 5)
+db <- fpc::dbscan(atp_non_remontada.scaled_anomalie, eps =8, MinPts = 5)
+#Visualisation des donnees sans valeurs aberrantes 
 fviz_cluster(db, atp_non_remontada.scaled_anomalie, geom = "point")
 
-##### Determination du K optimal (sans la valeur aberrante)
+##### Determination du K optimal (sans les valeurs aberrantes)
 
-# Elbow method nous donne K = 4
+# Elbow method nous donne K = 2
 fviz_nbclust(atp_non_remontada.scaled_anomalie, kmeans, method = "wss") +
-  geom_vline(xintercept = 4, linetype = 2)+
+  geom_vline(xintercept = 2, linetype = 2)+
   labs(subtitle = "Elbow method")
 
-#Silhouette method nous donne K = 2 mais aussi avec un K=4 le coef de 
-#silhouette ne va pas bcp baisser par rapport ? la repartition de 2 clusters 
-
+#Silhouette method nous donne K = 2 
 fviz_nbclust(atp_non_remontada.scaled_anomalie, kmeans, method = "silhouette")+
   labs(subtitle = "Silhouette method")
 
-# 8 m?thodes proposent une r?partition de 4 clusters contre 7 m?thodes qui recommandent
-#une r?partition de 2 clusters 
+#10 methodes proposent une repartition de 2 clusters contre 8 methodes qui recommandent
+#une repartition de 3 clusters 
 nbClust <- NbClust(atp_non_remontada.scaled_anomalie, distance = "euclidean", min.nc = 2,
                    max.nc = 10, method = "kmeans")
 fviz_nbclust(nbClust)
 
-####### Donc on choisit une r?partition de 4 clusters ########
-#D'apr?s la visualisation du dendogramme, le CAH confirme le choix de 4 clusters
+####### On choisit une repartition de 2 clusters ########
+#D'apres la visualisation du dendogramme, le CAH confirme le choix de 2 clusters
 par(mfrow =c(1,1))
 atp_non_remontada.dist_anomalie <- dist(atp_non_remontada.scaled_anomalie, "euclidean")
 hca <- hclust(atp_non_remontada.dist_anomalie, method = "ward.D2")
-plot(hca,main = "Dendrogramme ")
-rect.hclust(hca, k=4)
+plot(hca,main = "Dendrogramme ",xlab = "Matchs des 5 sets sans remontada")
+rect.hclust(hca, k=2)
 
 ####Affichage des clusters par l'algorithme du K-Medoids
-# On prend K = 4
-kmed <- pam(atp_non_remontada.scaled_anomalie, 4, metric = "euclidean", stand = TRUE)
+# On prend K = 2
+kmed <- pam(atp_non_remontada.scaled_anomalie, 2, metric = "euclidean", stand = TRUE)
 # Visualisation
 fviz_cluster(kmed,data = atp_non_remontada.scaled_anomalie,
-             palette = c("#2E9FDF", "#00AFBB","#AD4F09","#BBACAC"),   
+             palette = c("#2E9FDF", "#00AFBB"),   
              geom = "point",
              ellipse.type = "convex",
              ggtheme = theme_bw())
-#enlever la valeur aberrante de notre base de d?part
+#enlever les valeurs aberrantes de notre base de depart
 atp_non_remontada <- atp_non_remontada[-pt_aberrant,]
 #Ajouter la variable cluster, Nombre d'individus par cluster et 
 #la proportion d'individus dans chaque cluster 
@@ -325,40 +324,25 @@ atp_non_remontada %>%
   summarize(Nb_ind = n()) %>%
   mutate(Tau_ind =Nb_ind /sum(Nb_ind)) -> taux_indiv_clus
 
-#Cr?ation d'une base (de non remontada) de 421 observations dont lequel chaque 
-#cluster va ?tre repr?senter avec la m?me proportion que la base 
+#Creation d'une base (de non remontada) de 421 observations dont lequel chaque 
+#cluster va etre representer avec la meme proportion que la base 
 #initiale(on a pris que les 5 sets) 
 
 atp_non_remontada %>%
   filter(cluster == 1) %>%
-  mutate(remontada= rep(0,each=770)) -> atp_non_remontada.1
+  mutate(remontada= rep(0,each=1002)) -> atp_non_remontada.1
 atp_non_remontada.1 <- atp_non_remontada.1[sample(1:nrow(atp_non_remontada.1), 
-                                                  (421*taux_indiv_clus$Tau_ind[1]+1), replace=FALSE), -12]
+                                                  (421*taux_indiv_clus$Tau_ind[1]+1), replace=FALSE), -20]
 
 atp_non_remontada %>%
   filter(cluster == 2) %>%
-  mutate(remontada= rep(0,each=429)) -> atp_non_remontada.2
+  mutate(remontada= rep(0,each=1177)) -> atp_non_remontada.2
 atp_non_remontada.2 <- atp_non_remontada.2[sample(1:nrow(atp_non_remontada.2), 
-                                                  (421*taux_indiv_clus$Tau_ind[2]+1), replace=FALSE),-12 ]
-
-atp_non_remontada %>%
-  filter(cluster == 3) %>%
-  mutate(remontada= rep(0,each=568))-> atp_non_remontada.3
-atp_non_remontada.3 <- atp_non_remontada.3[sample(1:nrow(atp_non_remontada.3), 
-                                                  (421*taux_indiv_clus$Tau_ind[3]), replace=FALSE),-12 ]
-
-atp_non_remontada %>%
-  filter(cluster == 4) %>%
-  mutate(remontada= rep(0,each=414))-> atp_non_remontada.4
-atp_non_remontada.4 <- atp_non_remontada.4[sample(1:nrow(atp_non_remontada.4), 
-                                                  (421*taux_indiv_clus$Tau_ind[4]+1), replace=FALSE),-12 ]
+                                                  (421*taux_indiv_clus$Tau_ind[2]), replace=FALSE),-20]
 
 #Extraire les remontadas
 atp_remontada_all %>%
   filter(remontada == 1) %>%
   select(-c(1))-> atp_remontada
 #Fusion de remontada et non remontada
-Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,
-                         atp_non_remontada.2,atp_non_remontada.3,atp_non_remontada.4)
-
-
+Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,atp_non_remontada.2)
