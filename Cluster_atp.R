@@ -48,7 +48,7 @@ atp_Cluster %>%
 
 #que les 5 sets et selection des variables pertinentes
 atp_remontada_all  <- filter(atp_remontada_all, str_count(atp_remontada_all$score,"-") == 5)
-atp_remontada_all  <- atp_remontada_all[,c(4:8,13:17,22:24)]
+atp_remontada_all  <- atp_remontada_all[,-c(1:4)]
 
 #selection de la base non remontada
 atp_remontada_all %>% filter(atp_remontada_all$remontada == 0) -> atp_moit
@@ -58,7 +58,7 @@ atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
-atp_cluster_test <- atp_cluster_test[,-1]
+#atp_cluster_test <- atp_cluster_test[,-1]
 
 summary(atp_cluster_test)
 str(atp_cluster_test)
@@ -213,9 +213,46 @@ tx_err_rf # DÃ©sastreux...
 
 ## Recherche de caractéristiques
 library(MASS)
-modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_remontada)
-modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_remontada)
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = atp_cluster_test)
+summary(modele.complet) #Beaucoup de variables ne sont pas significatives et cele peut etre du par des
+#problème de multicolinéarité etre les variables explicatives. 
 
-select.modele.bic.back <- step(object = modele.complet, 
+library(corrplot) 
+mcor = cor(atp_cluster_test[,-20])
+corrplot(mcor, type="upper", order="hclust", tl.col="black", tl.srt=45) 
+#D'après la matrice de corrélation, on remarque que plusieurs variables sont fortement corrélées. 
+#Ainsi, pour palier à ce problème nous allons une sélection de variables selon le critère d'information de AIC.
+
+# Faisons une selection des variables qui expliquent au mieux la variable cible (remontada) solon le 
+# critère d'AIC.
+select.modele <- step(object = modele.complet, 
                                scope = list(lower = modele.trivial, upper = modele.complet), 
-                               direction = "backward", k = log(n))
+                               direction = "backward")
+
+select.modele
+modele.optimal = formula(select.modele$model) #le modèle optimal obtenu
+
+#### Test de validité du modèle global : H_0 : w_2 = w_3 = (0,0,0) ####
+modele.RL <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+res <- summary(modele.RL)
+res
+
+#### Tester (avec rapport de vraismeblance) la validité du modéle complet ####
+Sn = modele.RL$null.deviance - modele.RL$deviance #la statistique du rapport de vraisemblance
+print(Sn)
+ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrés de liberté de la loi limite de Sn, sous H_0
+print(ddl)
+pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) où Z suit une loi du chi^2(ddl)
+print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "trés" significatif
+
+
+# Estimation de l'erreur de classification, par K-fold cross-validation 
+# On peut utiliser le fonction cv.glm du package boot
+library(boot)
+modele.glm <- glm(formula = modele.optimal, family = binomial, data = atp_cluster_test, maxit = 3000)
+cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est approprié au cas d'une variable réponse binaire
+# Par exemple K = 10, on obtient
+K <- 10
+cv.err <- cv.glm(data = atp_cluster_test, glmfit = modele.glm, cost = cout, K = K)
+cv.err$delta[1] # un taux d'erreur de 0.42 : pas trop fameux ce taux d'erreur!
