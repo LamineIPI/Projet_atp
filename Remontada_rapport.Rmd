@@ -14,7 +14,7 @@ author:
   - Antoine Hornoy
   - Anas Oubida
   - Nasr Serbout
-  - Tchakah Koffi Kaffui
+  - Tchakah Koffi Kafui
 email:
   - nolan.carre@etudiant.univ-reims.fr
   - lamine.gueye@etudiant.univ-reims.fr
@@ -23,7 +23,7 @@ email:
   - nasr.serbout@etudiant.univ-reims.fr
   - koffi-kafui.tchakah@etudiant.univ-reims.fr
 date: "`r format(Sys.time(), '%d %B %Y')`"
-abstract: "Ce rapport présente l'analyse des facteurs d'une remontada. Quels sont les caractéristiques qui définissent la victoire d'un joueur alors qu'il a perdu deux premiers sets"
+abstract: "Ce rapport présente l'analyse des facteurs d'une remontada. L'objectif est de mettre en lumière les caractéristiques des matchs (ou des joueurs) traduisant une victoire malgré la perte des deux premiers sets"
 anac: "2020-2021"
 diplome: "Master Statistique pour l'Evaluation et la Prévision"
 module: "SEP0922"
@@ -42,16 +42,16 @@ link-citations: yes
 
 # Introduction 
 
-Notre brigade de projet ATP2 composée de Nolan, Lamine, Anas, Nasr et Koffi-Kafui. Le but de notre étude est de déterminer à partir des bases de données atp les matchs où l'on peut observer une remontée d'un joueur. Une remontada est un match où un joueur gagne la partie alors qu'il était mené de deux sets. Nous avons donc choisi d'étudier uniquement les matchs qui se sont déroulés en 5 sets. 
-Nous avons décider de réaliser cette mission de plusieurs façons. Dans un premier temps, nous avons travaillé sur une base de données constitué des 421 matchs correspondant à une remontée et de 421 matchs pris aléatoirement dans les matchs normaux. Dans un second temps nous avons choisi de [...]
+Notre brigade de projet ATP2 composée de Nolan, Lamine, Antoine, Anas, Nasr et Koffi-Kafui. Le but de notre étude est de déterminer les caractéristiques des matchs où l'on peut observer une remontée d'un joueur à partir des bases de données atp. Une remontada est un match où un joueur gagne la partie alors qu'il était mené de deux sets. Nous avons donc choisi d'étudier uniquement les matchs qui se sont déroulés en 5 sets. 
+Nous avons décidé de réaliser cette mission de plusieurs façons. Dans un premier temps, nous avons travaillé sur une base de données constituée des 421 matchs correspondant à une remontée et de 421 matchs pris aléatoirement dans les matchs normaux en 5 sets. Dans un second temps nous avons réalisé un partitionnement sur les 2182 observations des matchs sans remontada pour calculer la proportion des observations dans chaque cluster. Chaque cluster va être représenté dans les mêmes proportions parmi les 421 observations. Ainsi, nous pourrons comparer les résultats obtenus pour les deux bases de données.
 
 
 
 # Sélection aléatoire
 
-Pour la sélection de notre base de données, nous avons donc décidé de prendre 842 observations avec 421 matchs où l'on voit une remontada et 421 matchs sans remontada.
+Pour la sélection de notre base de données, nous avons donc décidé de prendre 842 observations avec 421 matchs où l'on voit une remontada et 421 matchs sans remontada pris aléatoirement.
 
-## Arbre de regression et Bagging
+## Arbre de Classification
 
 ```{r warning=FALSE, include=FALSE}
 
@@ -79,7 +79,7 @@ jean <- (test_classification[1,2] + test_classification[2,1])/sum(test_classific
 
 ```
 
-Nous avons d'abord créé l'arbre complet de régression (avec toutes les variables), dans celui-ci l'erreur de classification est de `r round(jean,2)`%.Nous cherchons ensuite a réduire ce taux d'erreur par élaguage et validation croisée. 
+Nous avons d'abord créé l'arbre complet de classification (avec toutes les variables et un minimum de deux individus par groupe), dans celui-ci l'erreur de classification est de `r round(jean,2)`. Nous cherchons ensuite à réduire ce taux d'erreur par élaguage (avec une méthode de validation croisée). 
 
 ```{r warning=FALSE, include=FALSE}
 
@@ -114,82 +114,108 @@ jose <- (test_classification[1,2] + test_classification[2,1])/sum(test_classific
 
 ```
 
-L'erreur est alors de `r round(jose,2) `.
-Elle a baissé mais est encore bien trop élevée. Nous avons donc Cherché les variables les plus importantes par bagging. Ces variables sont minutes, w_ace , w_svpt , w_1stWon , l_ace , l_svpt , w_2ndWon , w_bpFaced , l_2ndWon , l_1stWon , l_df , w_df , w_bpSaved. En effet ce sont les variables avec des indices de Gini le plus élevé : 
+L'erreur est alors de `r round(jose,2) `. Nous avons donc décidé de réaliser la méthode de bagging afin de déterminer les variables les plus importantes.
+
+## La méthode Bagging
+
+
+En utilisant l’échantillonnage aléatoire on a eu des résultats insatisfaisants en termes de prédiction, en essayant d’ajuster les modèles de la meilleure façon possible (à travers le choix des hyperparamètres qui permettent de minimiser l’erreur de prévision). Le modèle de bagging va nous permettre de détecter les variables qui expliquent les retournements de situations ou non. 
 
 ```{r warning=FALSE, include=FALSE}
+######Bagging 
 
-####Bagging et obtention importance des variables
-atp_train %>% mutate(remontada =factor(remontada) ) -> atp_train2
-atp_test %>% mutate(remontada =factor(remontada) ) -> atp_test2
+#train test split
 set.seed(123)
-randomForest(remontada ~ ., 
-             data = atp_train2, 
+index=sample(1:nrow(atp_cluster_test),0.8*nrow(atp_cluster_test),replace = FALSE)
+train=atp_cluster_test[index,]
+test=atp_cluster_test[-index,]
+dim(train); dim(test)
+
+#verification de l'equilibre au niveau de la variable cible 
+train%>%group_by(remontada)%>%summarise(N=n())
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
              mtry = 19,
              ntree = 500,
+             maxnodes=20,
              importance = TRUE,
              keep.forest = TRUE) -> atp_bagging
-predict(atp_bagging, newdata = atp_test2) -> yhat
-
-#Matrice de confusion
-table(atp_test2$remontada, yhat) -> conf_mat
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
 tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
-tx_err_bagging 
+tx_err_bagging
 
-## Lecture de quelques resultats
-# Matrice de confusion, avec le taux d'erreur de chaque modalite de mo
+
+# la matrice de confusion sur le train
 atp_bagging$confusion
 
+#donc on a un taux d'erreur sur l echontillon test de 0.47 et sur le train la moitiée qui font rémontada sont mal classé
+
+
+# Importance des variables
+bagging_importance  <- atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+
+```
+On obtient un taux d'erreur de `r tx_err_bagging` 
+
+Une fois que l'on sélectionne les variables grâce à l'indice de Gini, on obtient les variables suivantes : minutes, l_svpt, w_svpt et w_1stWon (voir Annexe 1).
+
+```{r warning=FALSE, include=FALSE}
 # Importance des variables
 atp_bagging$importance
 varImpPlot(atp_bagging)
 
-#On va donc garder les variables : minutes, w_ace , w_svpt , w_1stWon , l_ace , l_svpt , w_2ndWon , w_bpFaced , l_2ndWon , l_1stWon , l_df , w_df , w_bpSaved
-#on refait avec les variables les + importante (Gini)
+#selectionnant les meilleurs variables en terme de descente de l'Indice de GINI
 
 set.seed(123)
-atp_tree3 <- rpart(formula = remontada ~  minutes + w_ace + w_svpt + w_1stWon + l_ace + l_svpt + w_2ndWon + w_bpFaced + l_2ndWon + l_1stWon + l_df + w_df + w_bpSaved    ,
-                   data = atp_train,method = 'class',
-                   control = rpart.control(minsplit = 2, cp = 0.005, maxdepth = 30))
+index=sample(1:nrow(atp_cluster_test),0.8*nrow(atp_cluster_test),replace = FALSE)
+train=atp_cluster_test[index,c("minutes","w_svpt","l_svpt","w_1stWon","remontada")]
+test=atp_cluster_test[-index,c("minutes","w_svpt","l_svpt","w_1stWon","remontada")]
+dim(train); dim(test)
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
+             mtry = 4,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
+tx_err_bagging_ <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
 
-#fancyRpartPlot(atp_tree3)
-## Cross validation using xpred.rpart
-xpred.rpart(atp_tree3, xval = 10, return.all = FALSE) -> cv_results
-str(cv_results)
-cv_results #Les prédictions par validation croisée pour chaque valeur du paramètre
-atp_train$remontada 
+# erreur = 0.498 ==> pire 
 
-## Pour choisir le paramètre cp donnant la meilleure prédiction par validation croisée, on calcule le taux de mauvaise classification pour chaque valeur
-# Les modalités de la variable cible sont codées 1 et 0 ; le codage est donné dans la liste des attributs de atp_pruned_tree
-ylev <- attributes(atp_tree3)$ylevels
-cv_results
-#Calcul du taux de mauvaise classification pour chaque valeur de alpha/alpha_max
-tx_err_vc <- apply(cv_results, 2, function(x) sum(ylev[x] != atp_train$remontada)/ nrow(atp_train))
-cp_opt <- as.numeric(names(tx_err_vc)[which.min(tx_err_vc)])
-atp_pruned_tree <- prune.rpart(tree = atp_tree3, cp = cp_opt)
+atp_bagging$confusion
 
-fancyRpartPlot(atp_pruned_tree)
+#sur le train il donne des resultats mieux que le bagging sur tte les variables
 
-#########################
-# Prediction on the testing set set
-pred_atp_pruned <- predict(atp_pruned_tree, atp_test, type='class')
-table(pred_atp_pruned, atp_test$remontada) -> test_classification1
-#misclassification rate :
-Mis = (test_classification1[1,2] + test_classification1[2,1])/sum(test_classification1)
-Mis
-# pas folichon ça mais mieux
+# Importance des variables
+atp_bagging$importance
+
+
 
 ```
+Cependant, malgré la sélection de nos variables ayant l'indice de Gini le plus élevé nous obtenons un taux d'erreur plus important qu'avec toutes les variables, soit : `r round(tx_err_bagging,4)`.
+
 
 ```{r echo=FALSE, warning=FALSE }
 varImpPlot(atp_bagging)
 ```
 
-L'arbre le plus grand donne `r round(tx_err_bagging,2)`  de mauvaises classifications. Réduisons cette erreur via un élaguage  (par validation croisée). On obtient alors un arbre avec un taux de mauvaise classification s'élevant à `r round(Mis,2)` . L'erreur a très légèrement baissée mais cependant très élevée.
 
 ## Etude de la Random Forest
 
-L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre, La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
+L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre. La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -213,15 +239,104 @@ tx_err_RF
 
 ```
 
-Ce taux d'erreur ne semble pas pertinent. Nous pouvons émettre l'hypothèse que les variables que l'on possède ne permettent pas de prédire la remontée d'un joueur pendant le match.
+Ce taux d'erreur n'est pas satisfaisant. Nous pouvons émettre l'hypothèse que les variables que l'on possède ne permettent pas de prédire la remontée d'un joueur pendant le match.
 On observe également l'importance des variables dans notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match (Annexe 2). 
 
 
-## Regression logistique
+## Méthode de Boosting
 
-Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) en fonction des variables explicatives. 
+``` {r echo=FALSE, warning=FALSE,  include=FALSE}
+#################"boosting #######################
 
-Beaucoup de variables ne sont pas significatives et cela peut etre du par des problèmes de multicolinéarité entre les variables explicatives (voir annexe 3). On a un problème de multicolinéarité etre les variables explicatives. 
+
+set.seed(123)
+# Conversion adequation en variable binaire
+atp_cluster_test1 <- atp_cluster_test
+atp_cluster_test1$remontada=as.numeric(atp_cluster_test1$remontada)-1
+train=atp_cluster_test1[index,]
+test=atp_cluster_test1[-index,]
+# Boosting classification tree with gbm
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = train,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.01) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost1 <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost1
+
+bonne_pred_classe_rem1<-conf_mat[2,2] / sum(conf_mat[2,1] + conf_mat[2,2])
+bonne_pred_classe_rem1                        
+
+
+# le boosting donne un taux d'erreur de 0.44, et 56% des joueurs qui font remontada sont bien prédit 
+
+
+#donc on l'applique sur toute la base pour voir les variables les plus explicatives
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = atp_cluster_test1,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.01) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost
+
+bonne_pred_classe_rem<-conf_mat[2,2] / sum(conf_mat[2,1] + conf_mat[2,2])
+bonne_pred_classe_rem      
+#variables explicatives 
+summary(atp_boost)
+
+# les 4 meileures variables selon le boosting sont : minutes, w_svpt, l_svpt,w_bpFaced
+
+
+################adaboost
+
+X_train=as.matrix(train[,-20])
+y_train=(as.matrix(train[,20])*2) -1
+X_test=as.matrix(test[,-20])
+y_test=(as.matrix(test[,20])*2) -1
+
+
+adaboost(X_train, y_train, tree_depth = 1, n_rounds = 500)->atp_adaboost
+
+predict(atp_adaboost,X_test)->yhat
+
+
+table(y_test, yhat) -> conf_mat
+tx_err_ada_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_ada_boost
+
+```
+
+Le meilleur modèle en matière de minimisation de l’erreur de classification pour la base test est celui obtenu par boosting qui a un taux de mauvaise classification de `r tx_err_boost1`, et dans `r bonne_pred_classe_rem1*100 `% des cas, il classifie bien les matchs dans lesquels on observe un retournement de situation. Ces résultats restent très médiocres mais ils représentent les meilleurs de ce qu’on a pu avoir jusqu’à maintenant.
+
+En termes de pouvoir explicatif des variables, on a conclu que selon la méthode de boosting, les quatre meilleures variables permettant d’expliquer un retournement de situation (Annexe 3) sont : 
+
+•	Les minutes jouées dans un match;
+
+•	Le nombre de fois que le vainqueur (qui a fait le retournement de situation) a servi;
+
+•	Le nombre de fois que le perdant a servi; 
+
+•	Le nombre de balles de break défendues par le vainqueur.
+
+
+## Régression logistique
+
+Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) et les variables explicatives. 
+
+Beaucoup de variables ne sont pas significatives et cela peut-être du aux problèmes de corrélation entre les variables explicatives (voir annexe 4). On a un problème de multicolinéarité etre les variables explicatives. 
 
 ```{r warning=FALSE, include=FALSE}
 modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
@@ -237,7 +352,7 @@ modele.optimal = formula(select.modele$model)
 
 ```
 
-Le modèle optimal retenu est donc celui-ci (voir annexe 4): 
+Le modèle optimal retenu est donc celui-ci (voir annexe 5): 
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -264,13 +379,13 @@ print(pvalue) #on rejette H0, donc le modèle est "trés" significatif
 
 ```
 
-On obtient également les résultats suivants
+On obtient également les résultats suivants :
 
--La statistique du rapport de vraisemblance : `r Sn`
+  - La statistique du rapport de vraisemblance : `r Sn`;
 
--Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+  - Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`;
 
--La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "trés" significatif
+  - La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif.
 
 ```{r warning=FALSE, include=FALSE}
 
@@ -284,18 +399,135 @@ cv.err$delta[1]
 ```
 
 Le taux d'erreur de notre modèle est de : `r cv.err$delta[1]`
-Le résultat obtenu est similaire à celui obtenu par la méthode de Random Forest. Cependant, nous avons trouvé de meilleurs résultats grâce à la régression logistique 
-
-## Méthode Bagging 
-
-
+Le résultat obtenu est similaire à celui obtenu par la méthode de Random Forest. Cependant, nous avons trouvé de meilleurs résultats grâce à la régression logistique. 
 
 # Sélection par échantillonnage des données 
+
+Nous avons également décidé de sélectionner les données grâce à une méthode de clustering. En effet, le jeu de données des matchs en 5 sets est constitué de 2603 observations dont 2182 sont des matches sans remontada et 421 sont des matchs avec remontada. La proportion des observations qui représentent les matchs avec remontada est minoritaire, ne dépasse pas les 17%, ce qui cause un problème au niveau de l’analyse de ces observations.
+
+Nous avons effectué un partitionnement sur les 2182 observations des matchs sans remontada pour calculer la proportion des observations dans chaque cluster. Chaque cluster va être représenté par la même proportion dans les 421 observations.
+
+On a commencé le clustering des 2182 observations des matchs sans remontada par la détection des valeurs aberrantes grâce à l’algorithme de DBSCAN, afin de les enlever de notre étude (Annexe 6).
+
+```{r, echo=FALSE, warning=FALSE}
+
+repr 
+
+```
+
+Après la filtration de nos données, nous avons choisi de répartir les matchs non remontada en 2 clusters (Annexe 7 et 8).Toutes les méthodes testés (Elbow, silhouette et dix autres) ont suggéré une décomposition en deux clusters, regroupant ainsi les observations les plus semblables entre elles.
+
+On créé donc une base de données dans laquel chaque cluster va etre representé avec la même proportion que dans la base initiale (nous avons pris les matchs en 5 sets uniquement).
+
+## La méthode Bagging
+
+Dans ce deuxième partitionnement des données, on va essayer d’améliorer nos modèles afin d'expliquer les retournements de situation.
+
+```{r warning=FALSE, include=FALSE}
+
+######Bagging 
+
+#train test split
+set.seed(123)
+index=sample(1:nrow(Echantillon_atp),0.8*nrow(Echantillon_atp),replace = FALSE)
+train_clu=Echantillon_atp[index,]
+test_clu=Echantillon_atp[-index,]
+dim(train_clu); dim(test_clu)
+
+#verification de l'equilibre au niveau de la variable cible 
+train_clu%>%group_by(remontada)%>%summarise(N=n())
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train_clu, 
+             mtry = 19,
+             ntree = 500,
+             maxnodes=20,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test_clu) -> yhat
+# Confusion matrix for bagging
+table(test_clu$remontada, yhat) -> conf_mat
+tx_err_bagging2 <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging2
+
+# erreur du bagging est de 0.43 mieux que le boosting,bagging, adaboost sur l'echantionnage aleatoire
+## Lecture de quelques résultats
+# Matrice de confusion sur données train_clu
+atp_bagging$confusion
+
+#ici le bagging classifie correctement les joueurs qui font remontada dans 73% des cas sur le train, c enorme !! 
+# par contre sur l'autre classe il fait n'importe koi 
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+```
+
+Cette fois-ci le bagging a donné le meilleur taux de mauvaise classification, soit `r tx_err_bagging2`.Au niveau de notre échantillon globale le modèle du bagging permet de classer correctement dans 73% des cas les matchs présentant un retournement de situation. Cependant, le modèle ne classifie pas bien les matchs sans remontada dans 49% des cas.
+
+Une fois que l'on sélectionne les variables grâce à l'indice de Gini, on obtient les variables suivantes : : minutes, l_svpt, w_svpt et w_1stWon.
+
+```{r warning=FALSE, include=FALSE}
+
+
+set.seed(123)
+index=sample(1:nrow(Echantillon_atp),0.8*nrow(Echantillon_atp),replace = FALSE)
+train_clu=Echantillon_atp[index,c("minutes","w_svpt","l_svpt","w_2ndWon","w_1stIn","remontada")]
+test_clu=Echantillon_atp[-index,c("minutes","w_svpt","l_svpt","w_2ndWon","w_1stIn","remontada")]
+dim(train_clu); dim(test_clu)
+
+
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train_clu, 
+             mtry = 5,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test_clu) -> yhat
+# Confusion matrix for bagging
+table(test_clu$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+# c pire que le bagging precedent qui est sur tte les variables
+
+## Lecture de quelques résultats
+# Matrice de confusion sur données OOB
+atp_bagging$confusion
+# Importance des variables
+bag_importance_clu <- atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+```
+
+Cependant, malgré la sélection de nos variables ayant les indices de Gini les plus elevés nous obtenons un taux d'erreur plus important, soit : `r round(tx_err_bagging,4)`.
+
+
+```{r echo=FALSE, warning=FALSE }
+varImpPlot(atp_bagging)
+```
+
+Don on peut retenir la classification par bagging (bootstrap agregation) afin de prendre les quatre meilleures variables qui expliquent un retournement de situation : 
+
+•	Le nombre de fois que le vainqueur (qui a fait le retournement de situation) a servi;
+
+•	Le nombre de fois que le perdant a servi;
+
+•	Le nombre de points gagnés par le vainqueur après le second service;
+
+•	Les minutes jouées dans un match. 
 
 
 ## Etude de la Random Forest
 
-L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre, La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
+L'étude du taux d'erreur de notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir cherché le nombre de variables à prendre en compte ainsi que le nombre d'arbre, la base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
 
 ```{r RF echant, echo=FALSE, warning=FALSE}
 
@@ -316,14 +548,95 @@ tx_err_echant_RF
 
 ```
 
-On observe également l'importance des variables danns notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+On observe également l'importance des variables dans notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont :le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+
+## Boosting 
 
 
-## Regression logistique
+``` {r echo=FALSE, warning=FALSE,  include=FALSE}
+#################"boosting #######################
+set.seed(123)
+# Conversion adequation en variable binaire
 
-Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) en fonction des variables explicatives. 
+Echantillon_atp$remontada=as.numeric(Echantillon_atp$remontada)-1
+train=Echantillon_atp[index,]
+test=Echantillon_atp[-index,]
+# Boosting classification tree with gbm
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = train,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.001) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost2 <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost2
 
-Beaucoup de variables ne sont pas significatives et cele peut etre du par des problèmes de multicolinéarité etre les variables explicatives. On a un problème de multicolinéarité etre les variables explicatives. 
+# toujours le meilleure résultat est celuis du bagging avc tte les vars
+
+################adaboost
+
+X_train=as.matrix(train[,-20])
+y_train=(as.matrix(train[,20])*2) -1
+X_test=as.matrix(test[,-20])
+y_test=(as.matrix(test[,20])*2) -1
+
+
+adaboost(X_train, y_train, tree_depth = 2, n_rounds = 500)->atp_adaboost
+
+predict(atp_adaboost,X_test)->yhat
+
+
+table(y_test, yhat) -> conf_mat
+tx_err_ada_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_ada_boost
+
+#le meilleur est tjrs le bagging 
+
+
+
+#Conclusion : comme le bagging qui est sur tte les variables donne les meilleurs resultats 
+# sur le test, donc on l'applique sur la totalité de notre echantillon et retient les variables qui expliquent plus notre variable cible
+
+
+set.seed(123)
+randomForest(remontada ~ .,
+             data = Echantillon_atp, 
+             mtry = 19,
+             ntree = 500,
+             maxnodes=20,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+
+
+# Matrice de confusion sur les données 
+atp_bagging$confusion
+
+#ici le bagging classifie correctement les joueurs qui font remontada dans 63% des cas sur notre échantillon, c déja bien !! 
+# par contre sur l'autre classe il fait n'importe koi c comme du pile ou face
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+#on peut donc retenir les variables suivantes comme meileures en termes d'explication
+# W_svpt, l_svpt, w_2ndWon, minutes
+
+```
+
+Cette méthode de boosting nous donne de meilleurs résultats avec un taux d'erreur de `r tx_err_boost2`. Cependant, la méthode de bagging sur les données échantillonées offre toujours un taux d'erreur plus bas. 
+
+
+## Régression logistique
+
+Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) et des variables explicatives. 
+
+Beaucoup de variables ne sont pas significatives et cela peut-être du aux problèmes de corrélation entre les variables explicatives (voir annexe 4). On a un problème de multicolinéarité etre les variables explicatives.
 
 ```{r warning=FALSE, include=FALSE}
 modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = Echantillon_atp)
@@ -368,11 +681,11 @@ print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "tré
 
 On obtient également les résultats suivants
 
--La statistique du rapport de vraisemblance : `r Sn`
+-La statistique du rapport de vraisemblance : `r Sn`;
 
--Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+-Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`;
 
--La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif
+-La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif.
 
 ```{r warning=FALSE, include=FALSE}
 
@@ -388,22 +701,27 @@ cv.err$delta[1]
 Le taux d'erreur de notre modèle est de : `r cv.err$delta[1]`
 Le résultat obtenu est similaire à celui obtenu par la méthode de Random Forest. Cependant, nous avons trouvé de meilleurs résultats grâce à la méthode de Random Forest. 
 
+# Conclusion
+
+
+
+
 # (APPENDIX) Annexes {-}
 
 # Annexes
 
 Pour ce projet, nous avons décidé de ne vous présenter que les annexes en un unique exemplaire pour chaque méthode abordée dans ce rapport. Vous pourrez retrouver l'exhaustivité des informations non présentes en annexe dans le code utilisé pour la production de ce rapport.
 
-## Annexe 1 : Graphique sur l'indice de Gini pour chaque variable 
+
+## Annexe 1 : Le classement des variables en matière de pouvoir explicatif pour le bagging
 
 ```{r echo=FALSE, warning=FALSE}
 
-varImpPlot(atp_bagging)
+bagging_importance
 
 ```
 
-
-## Annexe 2 : L'importance des variables dans le modèle issu du Random Forest pour la Selection aléatoire
+## Annexe 2 : L'importance des variables dans le modèle issu du Random Forest pour la sélection aléatoire
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -411,7 +729,15 @@ atp_echant_rf$importance
 
 ```
 
-## Annexe 3 : Recherche de caractéristiques
+## Annexe 3 : Le classement des variables en matière de pouvoir explicatif pour le boosting
+
+```{r echo=FALSE, warning=FALSE}
+
+summary(atp_boost)
+
+```
+
+## Annexe 4 : Recherche de typologie
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -422,7 +748,7 @@ summary(modele.complet)
 ```
 
 
-## Annexe 4 : Choix du modèle optimal
+## Annexe 5 : Choix du modèle optimal
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -434,6 +760,34 @@ select.modele
 
 ```
 
+## Annexe 6 : Représentation des données sans valeurs aberrantes
+
+```{r, echo=FALSE, warning=FALSE}
+
+repr_ab 
+
+```
+
+## Annexe 7 : Méthodes de silhouette pour déterminer le nombre de cluster 
 
 
-# Bibliographie
+```{r, echo=FALSE, warning=FALSE}
+#Silhouette method nous donne K = 2 
+fviz_nbclust(atp_non_remontada.scaled_anomalie, kmeans, method = "silhouette")+
+  labs(subtitle = "Silhouette method")
+```
+
+
+## Annexe 8 : Représentation des données en fonction de leur cluster
+
+
+```{r, echo=FALSE, warning=FALSE}
+
+fviz_cluster(kmed,data = atp_non_remontada.scaled_anomalie,
+             palette = c("#2E9FDF", "#00AFBB"),   
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw(),
+             main ="Représentation graphique des données en cluster")
+
+```
