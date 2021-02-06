@@ -58,7 +58,7 @@ atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
-#atp_cluster_test <- atp_cluster_test[,-1]
+atp_cluster_test <- atp_cluster_test[,-1]
 
 summary(atp_cluster_test)
 str(atp_cluster_test)
@@ -347,8 +347,6 @@ atp_remontada_all %>%
 Echantillon_atp <- rbind(atp_remontada,atp_non_remontada.1,atp_non_remontada.2)
 
 ####################################" BOOSTING and Bagging ###################"
-
-
 ######Bagging 
 library(randomForest)
 atp_cluster_test$remontada=as.factor(atp_cluster_test$remontada)
@@ -368,6 +366,7 @@ randomForest(remontada ~ .,
              data = train, 
              mtry = 19,
              ntree = 500,
+             maxnodes=20,
              importance = TRUE,
              keep.forest = TRUE) -> atp_bagging
 predict(atp_bagging, newdata = test) -> yhat
@@ -376,9 +375,13 @@ table(test$remontada, yhat) -> conf_mat
 tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
 tx_err_bagging
 
-## Lecture de quelques résultats
-# Matrice de confusion sur données OOB
+
+# la matrice de confusion sur le train
 atp_bagging$confusion
+
+#donc on a un taux d'erreur sur l echontillon test de 0.47 et sur le train la moitiée qui font rémontada sont mal classé
+
+
 # Importance des variables
 atp_bagging$importance
 varImpPlot(atp_bagging)
@@ -386,18 +389,20 @@ varImpPlot(atp_bagging)
 
 
 
+#selectionnant les meilleurs variables en terme de descente de l'Indice de GINI
+
+
+
 set.seed(123)
 index=sample(1:nrow(atp_cluster_test),0.7*nrow(atp_cluster_test),replace = FALSE)
-train=atp_cluster_test[index,c("minutes","w_svpt","w_ace","l_svpt","w_1stWon","w_2ndWon","l_ace","l_1stWon","l_2ndWon","remontada")]
-test=atp_cluster_test[-index,c("minutes","w_svpt","w_ace","l_svpt","w_1stWon","w_2ndWon","l_ace","l_1stWon","l_2ndWon","remontada")]
+train=atp_cluster_test[index,c("minutes","w_svpt","l_svpt","w_1stWon","remontada")]
+test=atp_cluster_test[-index,c("minutes","w_svpt","l_svpt","w_1stWon","remontada")]
 dim(train); dim(test)
-
-
 #le bagging
 set.seed(123)
 randomForest(remontada ~ .,
              data = train, 
-             mtry = 9,
+             mtry = 4,
              ntree = 500,
              importance = TRUE,
              keep.forest = TRUE) -> atp_bagging
@@ -407,9 +412,12 @@ table(test$remontada, yhat) -> conf_mat
 tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
 tx_err_bagging
 
-## Lecture de quelques résultats
-# Matrice de confusion sur données OOB
+# erreur = 0.498 ==> pire 
+
 atp_bagging$confusion
+
+#sur le train il donne des resultats mieux que le bagging sur tte les variables
+
 # Importance des variables
 atp_bagging$importance
 varImpPlot(atp_bagging)
@@ -440,6 +448,7 @@ table(test$remontada, yhat) -> conf_mat
 tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
 tx_err_boost
 
+# le boosting donne un taux d'erreur de 0.44
 
 ################adaboost
 
@@ -448,6 +457,7 @@ y_train=(as.matrix(train[,20])*2) -1
 X_test=as.matrix(test[,-20])
 y_test=(as.matrix(test[,20])*2) -1
 
+library(JOUSBoost)
 adaboost(X_train, y_train, tree_depth = 1, n_rounds = 500)->atp_adaboost
 
 predict(atp_adaboost,X_test)->yhat
@@ -456,3 +466,160 @@ predict(atp_adaboost,X_test)->yhat
 table(y_test, yhat) -> conf_mat
 tx_err_ada_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
 tx_err_ada_boost
+
+# adaboost donne un taux d erreur de 0.47
+
+########################## Pour l'echontillonnage issu du clustering###
+
+######Bagging 
+library(randomForest)
+Echantillon_atp$remontada=as.factor(Echantillon_atp$remontada)
+#train test split
+set.seed(123)
+index=sample(1:nrow(Echantillon_atp),0.7*nrow(Echantillon_atp),replace = FALSE)
+train=Echantillon_atp[index,]
+test=Echantillon_atp[-index,]
+dim(train); dim(test)
+
+#verification de l'equilibre au niveau de la variable cible 
+train%>%group_by(remontada)%>%summarise(N=n())
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
+             mtry = 19,
+             ntree = 500,
+             maxnodes=20,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+# erreur du bagging est de 0.43 mieux que le boosting,bagging, adaboost sur l'echantionnage aleatoire
+## Lecture de quelques résultats
+# Matrice de confusion sur données train
+atp_bagging$confusion
+
+#ici le bagging classifie correctement les joueurs qui font remontada dans 73% des cas sur le train, c enorme !! 
+# par contre sur l'autre classe il fait n'importe koi 
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+
+
+set.seed(123)
+index=sample(1:nrow(Echantillon_atp),0.7*nrow(Echantillon_atp),replace = FALSE)
+train=Echantillon_atp[index,c("minutes","w_svpt","l_svpt","w_2ndWon","w_1stIn","remontada")]
+test=Echantillon_atp[-index,c("minutes","w_svpt","l_svpt","w_2ndWon","w_1stIn","remontada")]
+dim(train); dim(test)
+
+
+
+#le bagging
+set.seed(123)
+randomForest(remontada ~ .,
+             data = train, 
+             mtry = 5,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = test) -> yhat
+# Confusion matrix for bagging
+table(test$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging
+
+# c pire que le bagging precedent qui est sur tte les variables
+
+## Lecture de quelques résultats
+# Matrice de confusion sur données OOB
+atp_bagging$confusion
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+
+#################"boosting #######################
+
+library('gbm')
+set.seed(123)
+# Conversion adequation en variable binaire
+
+Echantillon_atp$remontada=as.numeric(Echantillon_atp$remontada)-1
+train=Echantillon_atp[index,]
+test=Echantillon_atp[-index,]
+# Boosting classification tree with gbm
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = train,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.001) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost
+
+# toujours le meilleure résultat est celuis du bagging avc tte les vars
+
+################adaboost
+
+X_train=as.matrix(train[,-20])
+y_train=(as.matrix(train[,20])*2) -1
+X_test=as.matrix(test[,-20])
+y_test=(as.matrix(test[,20])*2) -1
+
+library(JOUSBoost)
+adaboost(X_train, y_train, tree_depth = 2, n_rounds = 500)->atp_adaboost
+
+predict(atp_adaboost,X_test)->yhat
+
+
+table(y_test, yhat) -> conf_mat
+tx_err_ada_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_ada_boost
+
+#le meilleur est tjrs le bagging 
+
+
+
+#Conclusion : comme le bagging qui est sur tte les variables donne les meilleurs resultats 
+# sur le test, donc on l'applique sur la totalité de notre echantillon et retient les variables qui expliquent plus notre variable cible
+
+
+
+Echantillon_atp$remontada=as.factor(Echantillon_atp$remontada)
+set.seed(123)
+randomForest(remontada ~ .,
+             data = Echantillon_atp, 
+             mtry = 19,
+             ntree = 500,
+             maxnodes=20,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+
+
+# Matrice de confusion sur les données 
+atp_bagging$confusion
+
+#ici le bagging classifie correctement les joueurs qui font remontada dans 63% des cas sur le train, c déja bien !! 
+# par contre sur l'autre classe il fait n'importe koi c comme du pile ou face
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+
+#on peut donc retenir les variables suivantes comme meileures en termes d'explication
+# W_svpt, l_svpt, w_2ndWon, minutes
