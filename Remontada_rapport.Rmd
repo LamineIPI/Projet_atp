@@ -11,12 +11,14 @@ title: "Analyse des facteurs d'une remontada (ATP2)"
 author: 
   - Nolan Carré
   - Lamine Gueye
+  - Antoine Hornoy
   - Anas Oubida
   - Nasr Serbout
   - Tchakah Koffi Kaffui
 email:
   - nolan.carre@etudiant.univ-reims.fr
   - lamine.gueye@etudiant.univ-reims.fr
+  - antoine.hornoy@etudiant.univ-reims.fr
   - anas.oubida@etudiant.univ-reims.fr
   - nasr.serbout@etudiant.univ-reims.fr
   - koffi-kafui.tchakah@etudiant.univ-reims.fr
@@ -49,6 +51,142 @@ Nous avons décider de réaliser cette mission de plusieurs façons. Dans un pre
 
 Pour la sélection de notre base de données, nous avons donc décidé de prendre 842 observations avec 421 matchs où l'on voit une remontada et 421 matchs sans remontada.
 
+## Arbre de regression et Bagging
+
+```{r warning=FALSE, include=FALSE}
+
+#### Growing a deep tree by adjusting control parameters ####
+###Je test avec toutes les variables dans un premier temps
+set.seed(123)
+atp_tree2 <- rpart(formula = remontada ~ .,
+                   data = atp_train,method = 'class',
+                   control = rpart.control(minsplit = 2, cp = 0.005, maxdepth = 30))
+
+#fancyRpartPlot(model = atp_tree2)
+
+##Prediction on training set
+test_pred_atp <- predict(atp_tree2, atp_train, type='class')
+table(test_pred_atp, atp_train$remontada) -> test_classification
+#misclassification rate :
+misclassification = (test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+# = 0.08828523 ok erreur faible (normal cer train je pense)
+
+#Class prediction on testing set
+test_pred_atp <- predict(atp_tree2, atp_test,type='class')
+table(test_pred_atp, atp_test$remontada) -> test_classification
+#misclassification rate :
+jean <- (test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+
+```
+
+Nous avons d'abord créé l'arbre complet de régression (avec toutes les variables), dans celui-ci l'erreur de classification est de `r round(jean,2)`%.Nous cherchons ensuite a réduire ce taux d'erreur par élaguage et validation croisée. 
+
+```{r warning=FALSE, include=FALSE}
+
+#### Prunning tree ####
+## Cross validation using xpred.rpart
+
+xpred.rpart(atp_tree2, xval = 10, return.all = FALSE) -> cv_results
+# str(cv_results)
+#Le résultat est un tableau à trois dimensions. 
+# cv_results donne Les prédictions par validation croisée pour chaque valeur du paramètre
+
+
+## Pour choisir le paramètre cp donnant la meilleure prédiction par validation croisée, on calcule le taux de mauvaise classification pour chaque valeur
+# Les modalités de la variable cible sont codées 1 et 0 ; le codage est donné dans la liste des attributs de rpu_pruned_tree
+ylev <- attributes(atp_tree2)$ylevels
+# cv_results
+#Calcul du taux de mauvaise classification pour chaque valeur de alpha/alpha_max
+tx_err_vc <- apply(cv_results, 2, function(x) sum(ylev[x] != atp_train$remontada)/ nrow(atp_train))
+cp_opt <- as.numeric(names(tx_err_vc)[which.min(tx_err_vc)])
+atp_pruned_tree <- prune.rpart(tree = atp_tree2, cp = cp_opt)
+
+# fancyRpartPlot(atp_pruned_tree)
+
+#########################
+# Prediction on the testing set set
+pred_atp_pruned <- predict(atp_pruned_tree, atp_test, type='class')
+table(pred_atp_pruned, atp_test$remontada) -> test_classification
+#misclassification rate :
+jose <- (test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+#Erreur catastrophique
+# Essayons avec d'autre variables, pour trouver lesquels utiliser => Bagging
+
+```
+
+L'erreur est alors de `r round(jose,2) `.
+Elle a baissé mais est encore bien trop élevée. Nous avons donc Cherché les variables les plus importantes par bagging. Ces variables sont minutes, w_ace , w_svpt , w_1stWon , l_ace , l_svpt , w_2ndWon , w_bpFaced , l_2ndWon , l_1stWon , l_df , w_df , w_bpSaved. En effet ce sont les variables avec des indices de Gini le plus élevé : 
+
+```{r warning=FALSE, include=FALSE}
+
+####Bagging et obtention importance des variables
+atp_train %>% mutate(remontada =factor(remontada) ) -> atp_train2
+atp_test %>% mutate(remontada =factor(remontada) ) -> atp_test2
+set.seed(123)
+randomForest(remontada ~ ., 
+             data = atp_train2, 
+             mtry = 19,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = atp_test2) -> yhat
+
+#Matrice de confusion
+table(atp_test2$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging 
+
+## Lecture de quelques resultats
+# Matrice de confusion, avec le taux d'erreur de chaque modalite de mo
+atp_bagging$confusion
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+#On va donc garder les variables : minutes, w_ace , w_svpt , w_1stWon , l_ace , l_svpt , w_2ndWon , w_bpFaced , l_2ndWon , l_1stWon , l_df , w_df , w_bpSaved
+#on refait avec les variables les + importante (Gini)
+
+set.seed(123)
+atp_tree3 <- rpart(formula = remontada ~  minutes + w_ace + w_svpt + w_1stWon + l_ace + l_svpt + w_2ndWon + w_bpFaced + l_2ndWon + l_1stWon + l_df + w_df + w_bpSaved    ,
+                   data = atp_train,method = 'class',
+                   control = rpart.control(minsplit = 2, cp = 0.005, maxdepth = 30))
+
+#fancyRpartPlot(atp_tree3)
+## Cross validation using xpred.rpart
+xpred.rpart(atp_tree3, xval = 10, return.all = FALSE) -> cv_results
+str(cv_results)
+cv_results #Les prédictions par validation croisée pour chaque valeur du paramètre
+atp_train$remontada 
+
+## Pour choisir le paramètre cp donnant la meilleure prédiction par validation croisée, on calcule le taux de mauvaise classification pour chaque valeur
+# Les modalités de la variable cible sont codées 1 et 0 ; le codage est donné dans la liste des attributs de atp_pruned_tree
+ylev <- attributes(atp_tree3)$ylevels
+cv_results
+#Calcul du taux de mauvaise classification pour chaque valeur de alpha/alpha_max
+tx_err_vc <- apply(cv_results, 2, function(x) sum(ylev[x] != atp_train$remontada)/ nrow(atp_train))
+cp_opt <- as.numeric(names(tx_err_vc)[which.min(tx_err_vc)])
+atp_pruned_tree <- prune.rpart(tree = atp_tree3, cp = cp_opt)
+
+fancyRpartPlot(atp_pruned_tree)
+
+#########################
+# Prediction on the testing set set
+pred_atp_pruned <- predict(atp_pruned_tree, atp_test, type='class')
+table(pred_atp_pruned, atp_test$remontada) -> test_classification1
+#misclassification rate :
+Mis = (test_classification1[1,2] + test_classification1[2,1])/sum(test_classification1)
+Mis
+# pas folichon ça mais mieux
+
+```
+
+```{r echo=FALSE, warning=FALSE }
+varImpPlot(atp_bagging)
+```
+
+L'arbre le plus grand donne `r round(tx_err_bagging,2)`  de mauvaises classifications. Réduisons cette erreur via un élaguage  (par validation croisée). On obtient alors un arbre avec un taux de mauvaise classification s'élevant à `r round(Mis,2)` . L'erreur a très légèrement baissée mais cependant très élevée.
+
 ## Etude de la Random Forest
 
 L'étude du taux d'erreur sur notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir tatonné le nombre de variables à prendre en compte ainsi que le nombre d'arbre, La base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
@@ -69,23 +207,21 @@ randomForest(remontada ~ .,
 predict(atp_rf, newdata = atp_test) -> yhat
 # Confusion matrix for bagging
 table(atp_test$remontada, yhat) -> conf_mat
-tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
-tx_err_bagging
+tx_err_RF <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_RF
 
 
 ```
 
-On observe également l'importance des variables danns notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+Ce taux d'erreur ne semble pas pertinent. Nous pouvons émettre l'hypothèse que les variables que l'on possède ne permettent pas de prédire la remontée d'un joueur pendant le match.
+On observe également l'importance des variables dans notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match (Annexe 2). 
 
-```{r echo=FALSE, warning=FALSE}
-
-atp_rf$importance
-
-```
 
 ## Regression logistique
 
-Beaucoup de variables ne sont pas significatives et cele peut etre du par des problèmes de multicolinéarité etre les variables explicatives (voir annexe 1). On a un problème de multicolinéarité etre les variables explicatives. 
+Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) en fonction des variables explicatives. 
+
+Beaucoup de variables ne sont pas significatives et cela peut etre du par des problèmes de multicolinéarité entre les variables explicatives (voir annexe 3). On a un problème de multicolinéarité etre les variables explicatives. 
 
 ```{r warning=FALSE, include=FALSE}
 modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = atp_cluster_test)
@@ -101,7 +237,7 @@ modele.optimal = formula(select.modele$model)
 
 ```
 
-Le modèle optimal retenu est donc celui-ci : 
+Le modèle optimal retenu est donc celui-ci (voir annexe 4): 
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -123,16 +259,18 @@ print(Sn)
 ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrés de liberté de la loi limite de Sn, sous H_0
 print(ddl)
 pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) où Z suit une loi du chi^2(ddl)
-print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "trés" significatif
+print(pvalue) #on rejette H0, donc le modèle est "trés" significatif
 
 
 ```
 
-La statistique du rapport de vraisemblance : `r Sn`
+On obtient également les résultats suivants
 
-Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+-La statistique du rapport de vraisemblance : `r Sn`
 
-La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "trés" significatif
+-Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+
+-La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "trés" significatif
 
 ```{r warning=FALSE, include=FALSE}
 
@@ -146,6 +284,11 @@ cv.err$delta[1]
 ```
 
 Le taux d'erreur de notre modèle est de : `r cv.err$delta[1]`
+Le résultat obtenu est similaire à celui obtenu par la méthode de Random Forest. Cependant, nous avons trouvé de meilleurs résultats grâce à la régression logistique 
+
+## Méthode Bagging 
+
+
 
 # Sélection par échantillonnage des données 
 
@@ -175,37 +318,100 @@ tx_err_echant_RF
 
 On observe également l'importance des variables danns notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
 
+
+## Regression logistique
+
+Nous avons décidé d'utiliser une régression logistique afin d'évaluer et de caractériser les relations entre notre variable binaire (remontada ou non) en fonction des variables explicatives. 
+
+Beaucoup de variables ne sont pas significatives et cele peut etre du par des problèmes de multicolinéarité etre les variables explicatives. On a un problème de multicolinéarité etre les variables explicatives. 
+
+```{r warning=FALSE, include=FALSE}
+modele.complet <- glm(formula = as.factor(remontada) ~ ., family = binomial, data = Echantillon_atp)
+modele.trivial <- glm(formula = as.factor(remontada) ~ 1, family = binomial, data = Echantillon_atp)
+mcor = cor(Echantillon_atp[,-20])
+corrplot(mcor, type="upper", order="hclust", tl.col="black", tl.srt=45) 
+
+select.modele <- step(object = modele.complet, 
+                      scope = list(lower = modele.trivial, upper = modele.complet), 
+                      direction = "backward")
+
+modele.optimal = formula(select.modele$model) 
+
+```
+
+Le modèle optimal retenu est donc celui-ci : 
+
+```{r echo=FALSE, warning=FALSE}
+
+modele.optimal
+
+```
+
+
+
+```{r warning=FALSE, include=FALSE}
+
+modele.RL <- glm(formula = modele.optimal, family = binomial, data = Echantillon_atp, maxit = 3000)
+res <- summary(modele.RL)
+res
+
+#### Tester (avec rapport de vraismeblance) la validité du modéle complet 
+Sn = modele.RL$null.deviance - modele.RL$deviance #la statistique du rapport de vraisemblance
+print(Sn)
+ddl = modele.RL$df.null - modele.RL$df.residual #nombre de degrés de liberté de la loi limite de Sn, sous H_0
+print(ddl)
+pvalue = pchisq(q = Sn, df = ddl, lower.tail = F) #p_value du test : P(Z>Sn) où Z suit une loi du chi^2(ddl)
+print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "trés" significatif
+
+
+```
+
+On obtient également les résultats suivants
+
+-La statistique du rapport de vraisemblance : `r Sn`
+
+-Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`
+
+-La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif
+
+```{r warning=FALSE, include=FALSE}
+
+modele.glm <- glm(formula = modele.optimal, family = binomial, data = Echantillon_atp, maxit = 3000)
+cout <- function(r, pi) mean(abs(r-pi) > 0.5) #la fonction de cout, ce choix est approprié au cas d'une variable réponse binaire
+# Par exemple K = 10, on obtient
+K <- 10
+cv.err <- cv.glm(data = Echantillon_atp, glmfit = modele.glm, cost = cout, K = K)
+cv.err$delta[1]
+
+```
+
+Le taux d'erreur de notre modèle est de : `r cv.err$delta[1]`
+Le résultat obtenu est similaire à celui obtenu par la méthode de Random Forest. Cependant, nous avons trouvé de meilleurs résultats grâce à la méthode de Random Forest. 
+
+# (APPENDIX) Annexes {-}
+
+# Annexes
+
+Pour ce projet, nous avons décidé de ne vous présenter que les annexes en un unique exemplaire pour chaque méthode abordée dans ce rapport. Vous pourrez retrouver l'exhaustivité des informations non présentes en annexe dans le code utilisé pour la production de ce rapport.
+
+## Annexe 1 : Graphique sur l'indice de Gini pour chaque variable 
+
+```{r echo=FALSE, warning=FALSE}
+
+varImpPlot(atp_bagging)
+
+```
+
+
+## Annexe 2 : L'importance des variables dans le modèle issu du Random Forest pour la Selection aléatoire
+
 ```{r echo=FALSE, warning=FALSE}
 
 atp_echant_rf$importance
 
 ```
 
-
-
-```{r dotplotex, fig.cap = "(ref:capdotplotex)"}
-
-```
- 
-
-
-```{r tableex, message = FALSE}
-
-```
-
-
-
-```{theorem, theoex, name="Pythagorean theorem", echo=TRUE}
-
-```
-
-
-
-# (APPENDIX) Annexes {-}
-
-# Annexes
-
-## Annexe 1 : Recherche de caractéristiques
+## Annexe 3 : Recherche de caractéristiques
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -215,7 +421,8 @@ summary(modele.complet)
 
 ```
 
-## Annexe 2 : Choix du modèle optimal
+
+## Annexe 4 : Choix du modèle optimal
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -226,4 +433,7 @@ select.modele <- step(object = modele.complet,
 select.modele
 
 ```
+
+
+
 # Bibliographie
