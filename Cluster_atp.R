@@ -543,7 +543,35 @@ table(test$remontada, yhat) -> conf_mat
 tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
 tx_err_boost
 
-# le boosting donne un taux d'erreur de 0.44
+bonne_pred_classe_rem<-conf_mat[2,2] / sum(conf_mat[2,1] + conf_mat[2,2])
+bonne_pred_classe_rem                        
+
+
+# le boosting donne un taux d'erreur de 0.44, et 56% des joueurs qui font remontada sont bien prédit 
+
+
+#donc on l'applique sur toute la base pour voir les variables les plus explicatives
+set.seed(123)
+atp_boost <- gbm(remontada ~ .,
+                 data = atp_cluster_test,
+                 distribution = "bernoulli",
+                 n.trees = 500, 
+                 interaction.depth = 4, 
+                 shrinkage = 0.01) #shrinkage = learning rate (hyper-parameter to be set by user)
+as.numeric(predict(atp_boost, newdata = test, n.trees = 500,
+                   type = "response") > 0.5) -> yhat
+# Confusion matrix for boosting
+table(test$remontada, yhat) -> conf_mat
+tx_err_boost <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_boost
+
+bonne_pred_classe_rem<-conf_mat[2,2] / sum(conf_mat[2,1] + conf_mat[2,2])
+bonne_pred_classe_rem      
+#variables explicatives 
+summary(atp_boost)
+
+# les 4 meileures variables selon le boosting sont : minutes, w_svpt, l_svpt,w_bpFaced
+
 
 ################adaboost
 
@@ -708,7 +736,7 @@ randomForest(remontada ~ .,
 # Matrice de confusion sur les données 
 atp_bagging$confusion
 
-#ici le bagging classifie correctement les joueurs qui font remontada dans 63% des cas sur le train, c déja bien !! 
+#ici le bagging classifie correctement les joueurs qui font remontada dans 63% des cas sur notre échantillon, c déja bien !! 
 # par contre sur l'autre classe il fait n'importe koi c comme du pile ou face
 
 # Importance des variables
