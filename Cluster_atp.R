@@ -58,7 +58,7 @@ atp_moit <- atp_moit[sample(1:nrow(atp_moit), 421, replace=FALSE), ]
 atp_moit_rem <- atp_remontada_all%>%filter(remontada==1)
 
 atp_cluster_test <- full_join(atp_moit,atp_moit_rem)
-atp_cluster_test <- atp_cluster_test[,-1]
+#atp_cluster_test <- atp_cluster_test[,-1]
 
 summary(atp_cluster_test)
 str(atp_cluster_test)
