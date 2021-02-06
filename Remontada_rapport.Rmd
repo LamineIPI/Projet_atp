@@ -319,7 +319,7 @@ tx_err_ada_boost
 
 ```
 
-Le meilleur modèle en matière de minimisation de l’erreur de classification pour la base test est celui obtenu par boosting qui a un taux de mauvaise classification de `r tx_err_boost1`, et dans `r bonne_pred_classe_rem1*100 `% des cas, il classifie bien les matchs dans lesquels on observe un retournement de situation. Ces résultats restent très médiocres mais ils représentent les meilleurs de ce qu’on a pu avoir jusqu’à maintenant.
+L'un des meilleurs modèles en matière de minimisation de l’erreur de classification pour la base test est celui obtenu par boosting qui a un taux de mauvaise classification de `r tx_err_boost1`, et dans `r bonne_pred_classe_rem1*100 `% des cas, il classifie bien les matchs dans lesquels on observe un retournement de situation. Ces résultats restent très médiocres mais ils représentent les meilleurs de ce qu’on a pu avoir jusqu’à maintenant.
 
 En termes de pouvoir explicatif des variables, on a conclu que selon la méthode de boosting, les quatre meilleures variables permettant d’expliquer un retournement de situation (Annexe 3) sont : 
 
@@ -466,7 +466,7 @@ varImpPlot(atp_bagging)
 
 ```
 
-Cette fois-ci le bagging a donné le meilleur taux de mauvaise classification, soit `r tx_err_bagging2`.Au niveau de notre échantillon globale le modèle du bagging permet de classer correctement dans 73% des cas les matchs présentant un retournement de situation. Cependant, le modèle ne classifie pas bien les matchs sans remontada dans 49% des cas.
+Cette fois-ci le bagging a donné un bon résultat (comparanat à celui qui était fait sur l'échantillonnage aléatoire) en terme de taux de mauvaise classification, soit `r tx_err_bagging2`.Au niveau de notre échantillon globale le modèle du bagging permet de classer correctement dans 73% des cas les matchs présentant un retournement de situation. Cependant, le modèle ne classifie pas bien les matchs sans remontada dans 49% des cas.
 
 Une fois que l'on sélectionne les variables grâce à l'indice de Gini, on obtient les variables suivantes : : minutes, l_svpt, w_svpt et w_1stWon.
 
