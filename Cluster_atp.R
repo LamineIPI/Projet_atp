@@ -140,33 +140,128 @@ library('rattle') # For displaying nicely classification trees prodiced by rpart
 library('tree') #For growing a single tree and pruning it
 
 #### Extracting training and test datasets ####
-set.seed(234)
+set.seed(123)
 N <- nrow(atp_cluster_test)
-sel <- sample(1:N, size = 25, replace = FALSE)
-atp_cluster_test <- atp_cluster_test[,-c(1:3)]
-atp_cluster_test <- atp_cluster_test[,-c(11:19)]
+sel <- sample(1:N, size = 253, replace = FALSE)
+atp_cluster_test <- atp_cluster_test[,-1]
 atp_train <- atp_cluster_test[setdiff(1:N, sel),]
 atp_test <- atp_cluster_test[sel,]
+               
+atp_train %>% mutate(remontada =factor(remontada) ) -> atp_train
+atp_test %>% mutate(remontada =factor(remontada) ) -> atp_test2
 
-#### Growing a tree with default parameters ####
-atp_tree1 <- rpart(formula = remontada ~ .,
-                   data = atp_train,
-                    control = tree.control(nobs = nrow(atp_train), mindev = 0))
-atp_tree1 # Displaying tree in console
-fancyRpartPlot(model = atp_tree1) #A pretty representation of the classification tree
-
-#A basic representation, but with branch length proportional to criteria loss 
-plot(atp_tree1)
-par(cex=0.7)
-text(atp_tree1, pretty=0)
 
 #### Growing a deep tree by adjusting control parameters ####
 atp_tree2 <- rpart(formula = remontada ~ .,
-                   data = atp_train,
-                   control = rpart.control(minsplit = 2, cp = 0))
-fancyRpartPlot(model = atp_tree2)
+                   data = atp_train,method = 'class',
+                   control = rpart.control(minsplit = 2, cp = 0.005, maxdepth = 30))
+#fancyRpartPlot(model = atp_tree2)
 
 
+##Prediction on training set
+test_pred_atp <- predict(atp_tree2, atp_train, type='class')
+table(test_pred_atp, atp_train$remontada) -> test_classification
+#misclassification rate :
+(test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+# = 0.1256367 ok erreur faible (normal car train je pense)
+
+#Class prediction on testing set
+test_pred_atp <- predict(atp_tree2, atp_test,type='class')
+table(test_pred_atp, atp_test$remontada) -> test_classification
+#misclassification rate :
+(test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+# = 0.4743083 ah ! bien haut
+
+#### Prunning tree ####
+## Cross validation using xpred.rpart
+
+xpred.rpart(atp_tree2, xval = 10, return.all = FALSE) -> cv_results
+str(cv_results)
+#Le résultat est un tableau à trois dimensions. 
+cv_results #Les prédictions par validation croisée pour chaque valeur du paramètre
+atp_train$remontada 
+
+## Pour choisir le paramètre cp donnant la meilleure prédiction par validation croisée, on calcule le taux de mauvaise classification pour chaque valeur
+# Les modalités de la variable cible sont codées 1 et 0 ; le codage est donné dans la liste des attributs de rpu_pruned_tree
+ylev <- attributes(atp_tree2)$ylevels
+cv_results
+#Calcul du taux de mauvaise classification pour chaque valeur de alpha/alpha_max
+tx_err_vc <- apply(cv_results, 2, function(x) sum(ylev[x] != atp_train$remontada)/ nrow(atp_train))
+cp_opt <- as.numeric(names(tx_err_vc)[which.min(tx_err_vc)])
+atp_pruned_tree <- prune.rpart(tree = atp_tree2, cp = cp_opt)
+
+#fancyRpartPlot(atp_pruned_tree)
+
+#########################
+# Prediction on the testing set set
+pred_atp_pruned <- predict(atp_pruned_tree, atp_test, type='class')
+table(pred_atp_pruned, atp_test$remontada) -> test_classification
+#misclassification rate :
+(test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+# 0.4664032
+#Erreur catastrophique
+# Essayons avec d'autre variables, pour trouver lesquels utiliser => Bagging
+  
+####Bagging et obtention importance des variables
+atp_train %>% mutate(remontada =factor(remontada) ) -> atp_train2
+atp_test %>% mutate(remontada =factor(remontada) ) -> atp_test2
+set.seed(123)
+randomForest(remontada ~ ., 
+             data = atp_train2, 
+             mtry = 19,
+             ntree = 500,
+             importance = TRUE,
+             keep.forest = TRUE) -> atp_bagging
+predict(atp_bagging, newdata = atp_test2) -> yhat
+
+#Matrice de confusion
+table(atp_test2$remontada, yhat) -> conf_mat
+tx_err_bagging <-(conf_mat[1,2] + conf_mat[2,1]) / sum(conf_mat)
+tx_err_bagging 
+#On a un taux d'erreur de 47.43083%
+
+## Lecture de quelques resultats
+# Matrice de confusion, avec le taux d'erreur de chaque modalite de mo
+atp_bagging$confusion
+
+# Importance des variables
+atp_bagging$importance
+varImpPlot(atp_bagging)
+
+#On va donc garder les variables : minutes, w_ace , w_svpt , w_1stWon , l_ace , l_svpt , w_2ndWon , w_bpFaced , l_2ndWon , l_1stWon , l_df , w_df , w_bpSaved
+#on refait avec les variables les + importante (Gini)
+
+set.seed(123)
+atp_tree3 <- rpart(formula = remontada ~  minutes + w_ace + w_svpt + w_1stWon + l_ace + l_svpt + w_2ndWon + w_bpFaced + l_2ndWon + l_1stWon + l_df + w_df + w_bpSaved    ,
+                   data = atp_train,method = 'class',
+                   control = rpart.control(minsplit = 2, cp = 0.005, maxdepth = 30))
+
+#fancyRpartPlot(atp_tree3)
+## Cross validation using xpred.rpart
+xpred.rpart(atp_tree3, xval = 10, return.all = FALSE) -> cv_results
+str(cv_results)
+cv_results #Les prédictions par validation croisée pour chaque valeur du paramètre
+atp_train$remontada 
+
+## Pour choisir le paramètre cp donnant la meilleure prédiction par validation croisée, on calcule le taux de mauvaise classification pour chaque valeur
+# Les modalités de la variable cible sont codées 1 et 0 ; le codage est donné dans la liste des attributs de atp_pruned_tree
+ylev <- attributes(atp_tree3)$ylevels
+cv_results
+#Calcul du taux de mauvaise classification pour chaque valeur de alpha/alpha_max
+tx_err_vc <- apply(cv_results, 2, function(x) sum(ylev[x] != atp_train$remontada)/ nrow(atp_train))
+cp_opt <- as.numeric(names(tx_err_vc)[which.min(tx_err_vc)])
+atp_pruned_tree <- prune.rpart(tree = atp_tree3, cp = cp_opt)
+
+#fancyRpartPlot(atp_pruned_tree)
+
+#########################
+# Prediction on the testing set set
+pred_atp_pruned <- predict(atp_pruned_tree, atp_test, type='class')
+table(pred_atp_pruned, atp_test$remontada) -> test_classification
+#misclassification rate :
+(test_classification[1,2] + test_classification[2,1])/sum(test_classification)
+#0.4782609... pas fou ça mais mieux
+                   
 #### Bootstrap aggregating ####
 
 ## Loading package
