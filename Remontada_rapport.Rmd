@@ -703,8 +703,10 @@ Le résultat obtenu est similaire à celui obtenu par la méthode de Random Fore
 
 # Conclusion
 
-
-
+D’après cette étude, le modèle optimal est obtenu par la méthode de Random Forest avec la base créée par échantillonnage. Le résultat obtenu par cette méthode nous donne un taux d'erreur de `r round( tx_err_echant_RF*100 , 2)` %. Ce modèle souligne l’impact de certaines variables dans les matchs durant lesquels il y a un retournement de situation. La première de ces variables est la durée du match, cela est explicable par le simple fait qu’il y ait une remontée. En effet, il faut gagner 3 sets pour remporter un match, donc si le joueur ayant perdu les 2 premiers sets remporte les 2 suivants cela va inévitablement faire durer le match. 
+Ensuite, le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant et par le perdant ont aussi un impact sur les retournements de situation. Mais n’est-ce pas l’inverse ? 
+Comme dit précédemment, les matchs durant lesquels un joueur fait une remontée sont plus long donc il y a forcément plus de services effectués par les joueurs. 
+Nous ne pouvons donc pas, à l’issus de cette étude, affirmer l’impact d’une quelconque variable sur la capacité d’un joueur à retourner la situation.
 
 # (APPENDIX) Annexes {-}
 
