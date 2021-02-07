@@ -1,9 +1,9 @@
 
-# Projet_atp Apprentissage Automatique. 
+# Projet_atp Apprentissage Automatique  
 Ce projet a pour but d'atteindre l'objectif suivant : 
 - L'identification des facteurs permettant d’expliquer les retournements de situation (gagner un match en 5 sets en étant mené 2 sets à 0)
 
-Vous pourrez retrouver le fichier pdf :"Remontada_rapport.pdf" présentant la méthodologie abordée durant ce projet ainsi que les résultats obtenus.
+Vous pourrez retrouver le fichier pdf : "Remontada_rapport.pdf" présentant la méthodologie abordée durant ce projet ainsi que les résultats obtenus.
 
 # Table des matières du rapport
 
@@ -42,7 +42,7 @@ en 5 sets. Nous avons décidé de réaliser cette mission de plusieurs façons. 
 avons travaillé sur une base de données constituée des 421 matchs correspondant à une remontée et de 421
 matchs pris aléatoirement dans les matchs normaux en 5 sets. Dans un second temps nous avons réalisé
 un partitionnement sur les 2182 observations des matchs sans remontada pour calculer la proportion des
-observations dans chaque cluster. Chaque cluster va être représenté dans les mêmes proportions parmi les
+observations dans chaque cluster. Chaque cluster va être représenté dans les mêmes proportions parmis les
 421 observations. Ainsi, nous pourrons comparer les résultats obtenus grâce aux différentes méthodes vues en cours
 pour les deux bases de données.
 
