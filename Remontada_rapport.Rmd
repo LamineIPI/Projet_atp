@@ -119,7 +119,7 @@ L'erreur est alors de `r round(jose,2) `. Nous avons donc décidé de réaliser 
 ## La méthode Bagging
 
 
-En utilisant l’échantillonnage aléatoire on a eu des résultats insatisfaisants en termes de prédiction, en essayant d’ajuster les modèles de la meilleure façon possible (à travers le choix des hyperparamètres qui permettent de minimiser l’erreur de prévision). Le modèle de bagging va nous permettre de détecter les variables qui expliquent les retournements de situations ou non. 
+En utilisant l’échantillonnage aléatoire les résultats sont insatisfaisants en termes de prédiction, en essayant d’ajuster les modèles de la meilleure façon possible (à travers le choix des hyperparamètres qui permettent de minimiser l’erreur de prévision). Le modèle de bagging va nous permettre de détecter les variables qui expliquent les retournements de situations ou non. 
 
 ```{r warning=FALSE, include=FALSE}
 ######Bagging 
@@ -381,9 +381,9 @@ print(pvalue) #on rejette H0, donc le modèle est "trés" significatif
 
 On obtient également les résultats suivants :
 
-  - La statistique du rapport de vraisemblance : `r Sn`;
+  - La statistique du rapport de vraisemblance : `r Sn` ;
 
-  - Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`;
+  - Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl` ;
 
   - La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif.
 
@@ -415,7 +415,7 @@ repr
 
 ```
 
-Après la filtration de nos données, nous avons choisi de répartir les matchs non remontada en 2 clusters (Annexe 7 et 8).Toutes les méthodes testés (Elbow, silhouette et dix autres) ont suggéré une décomposition en deux clusters, regroupant ainsi les observations les plus semblables entre elles.
+Après la filtration de nos données, nous avons choisi de répartir les matchs non remontada en 2 clusters (Annexe 7 et 8). Toutes les méthodes testées (Elbow, silhouette et dix autres) ont suggéré une décomposition en deux clusters, regroupant ainsi les observations les plus semblables entre elles.
 
 On créé donc une base de données dans laquel chaque cluster va etre representé avec la même proportion que dans la base initiale (nous avons pris les matchs en 5 sets uniquement).
 
@@ -466,7 +466,7 @@ varImpPlot(atp_bagging)
 
 ```
 
-Cette fois-ci le bagging a donné un bon résultat (comparanat à celui qui était fait sur l'échantillonnage aléatoire) en terme de taux de mauvaise classification, soit `r tx_err_bagging2`.Au niveau de notre échantillon globale le modèle du bagging permet de classer correctement dans 73% des cas les matchs présentant un retournement de situation. Cependant, le modèle ne classifie pas bien les matchs sans remontada dans 49% des cas.
+Cette fois-ci le bagging a donné un bon résultat (comparé à celui qui était fait sur l'échantillonnage aléatoire) en terme de taux de mauvaise classification, soit `r tx_err_bagging2`. Au niveau de notre échantillon globale le modèle obtenu par bagging permet de classer correctement dans 73% des cas les matchs présentant un retournement de situation. Cependant, le modèle ne classifie pas correctement les matchs sans remontada dans 49% des cas.
 
 Une fois que l'on sélectionne les variables grâce à l'indice de Gini, on obtient les variables suivantes : : minutes, l_svpt, w_svpt et w_1stWon.
 
@@ -514,20 +514,20 @@ Cependant, malgré la sélection de nos variables ayant les indices de Gini les 
 varImpPlot(atp_bagging)
 ```
 
-Don on peut retenir la classification par bagging (bootstrap agregation) afin de prendre les quatre meilleures variables qui expliquent un retournement de situation : 
+Donc on peut retenir la classification par bagging (bootstrap agregation) afin de prendre les quatre meilleures variables qui expliquent un retournement de situation : 
 
-•	Le nombre de fois que le vainqueur (qui a fait le retournement de situation) a servi;
+•	Le nombre de fois que le vainqueur (qui a fait le retournement de situation) a servi ;
 
-•	Le nombre de fois que le perdant a servi;
+•	Le nombre de fois que le perdant a servi ;
 
-•	Le nombre de points gagnés par le vainqueur après le second service;
+•	Le nombre de points gagnés par le vainqueur après le second service ;
 
 •	Les minutes jouées dans un match. 
 
 
 ## Etude de la Random Forest
 
-L'étude du taux d'erreur de notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir cherché le nombre de variables à prendre en compte ainsi que le nombre d'arbre, la base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
+L'étude du taux d'erreur de notre Randomforest est réalisée grâce à la matrice de confusion. Après avoir cherché le nombre de variables à prendre en compte ainsi que le nombre d'arbres, la base d'entrainement correspond à 80% de la base totale et la base de test correspond à 20%. Nous arrivons à un modèle ayant un taux d'erreur de :
 
 ```{r RF echant, echo=FALSE, warning=FALSE}
 
@@ -548,7 +548,7 @@ tx_err_echant_RF
 
 ```
 
-On observe également l'importance des variables dans notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont :le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
+On observe également l'importance des variables dans notre modèle, on constate que les variables ayant le plus d'impact dans notre modèle sont : le nombre de jeux où le gagnant sert, le nombre de points servis par le gagnant, le nombre de points servis par le perdant ou encore la durée du match. 
 
 ## Boosting 
 
@@ -681,11 +681,11 @@ print(pvalue) #on obtient 1.794716e-07, on rejette H0, donc le modèle est "tré
 
 On obtient également les résultats suivants
 
--La statistique du rapport de vraisemblance : `r Sn`;
+- La statistique du rapport de vraisemblance : `r Sn` ;
 
--Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl`;
+- Le nombre de degré de liberté de la loi limite de Sn, sous H_0 : `r ddl` ;
 
--La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif.
+- La p-value du test est égale à : `r pvalue` . On rejette H0, donc le modèle est "très" significatif.
 
 ```{r warning=FALSE, include=FALSE}
 
