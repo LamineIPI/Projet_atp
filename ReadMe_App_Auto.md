@@ -53,6 +53,7 @@ pour les deux bases de données.
   Ouvrir un terminal et taper les lignes suivantes :
  - git clone https://github.com/LamineIPI/Projet_atp.git
  - cd Projet_atp
+ - Ajouter le dossier "data" précédemment créé dans le dossier "Projet_atp"
  - R CMD BATCH CLUSTER_FIN.R
  
  Un fichier Remontada_rapport.pdf est ensuite créé dans le dossier Projet_atp.
