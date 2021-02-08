@@ -97,6 +97,30 @@ Nadal a gagné la majorité des rencontres sauf avec les joueurs suivants : 3 d�
 Ce tableau synthétise l'ensemble des matchs réalisés permettant donc de visualiser les victoires et les défaites de notre joueur face à ses différents adversaires. 
 
 
+## Dictionnaire des Variables : 
+
+Variable  | Description 
+----------|-----------
+W_svpt    | Nombre de fois que le vainqueur a servi	 
+Minutes   | Minutes joués	 
+L_svpt	  | Nombre de fois que le perdant a servi	 
+W_bpfaced | Nombre de balles de break défendues par le vainqueur	 
+W_1stin	  | Nombre de premiers services réussis par le vainqueur	 
+W_1stwon  | Nombre de points gagnés après le premier service par le vainqueur	
+W_2ndwon  | Nombre de points gagnés après le deuxième service par le vainqueur	 
+L_1stin	  |  Nombre de premiers services réussis par le perdant	
+L_2ndwon  | Nombre de points gagnés après le deuxième service par le perdant	
+W_ace	    | Nombre d'aces marqués par le vainqueur du match	
+L_ace	    | Nombre d'aces marqués par le perdant du match
+L_df	    | Nombre de doubles fautes du perdant 
+W_bpsaved | 	Nombre de balles de breaks sauvés par le vainqueur	
+L_1stwon  | Nombre de points gagnés après le premier service par le perdant	 
+L_bpfaced | Nombre de balles de break défendues par le perdant	
+W_df	    | Nombre de doubles fautes du vainqueur	
+L_bpsaved |	Nombre de balles de breaks sauvés par le perdant	
+W_svgms	  | Nombre de jeux de service gagnés par le gagnant
+L_svgms	  | Nombre de jeux de service gagnés par le perdant	
+
 
 
 
